@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Choose Role</title>
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+</head>
+<body class="choose-page">
+  <div class="header">
+    <h1>Who are you?</h1>
+    <p>Pick your role to continue.</p>
+  </div>
+
+  <div class="row">
+    <!-- freelancer -->
+    <a href="/login?role=freelancer" class="card">
+      <div class="left">
+        <div class="icon freelancer">👩‍💻</div>
+        <div class="text">
+          <h2>Freelancer</h2>
+          <p>Apply to jobs, manage proposals, and update your profile.</p>
+        </div>
+      </div>
+      <span class="cta freelancer">
+        Continue  <span>→</span>
+      </span>
+    </a>
+
+    <!-- recruiter -->
+    <a href="/login?role=recruiter" class="card">
+      <div class="left">
+        <div class="icon recruiter">🧑‍💼</div>
+        <div class="text">
+          <h2>Recruiter</h2>
+          <p>Post openings, review applicants, and manage your listings.</p>
+        </div>
+      </div>
+      <span class="cta recruiter">
+        Continue <span>→</span>
+      </span>
+    </a>
+  </div>
+</body>
+</html>
+

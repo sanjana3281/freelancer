@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Sign in</title>
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<script src="{% static 'js/login.js' %}" defer></script>
+</head>
+<body class="auth-page login">
+  <form style="display:none">{% csrf_token %}</form>
+
+  <div class="shell">
+   
+    <section class="left">
+      <div class="chip"><span class="dot"></span><span>Access your account</span></div>
+      <h1>Welcome back, <span id="who">Freelancer</span></h1>
+      <p class="lead">Choose Login or Register. You can switch any time.</p>
+
+      <div class="pills">
+        <button class="pill is-active" id="pill-login" type="button">Login</button>
+        <button class="pill" id="pill-register" type="button">Register</button>
+      </div>
+    </section>
+
+   
+    <section class="right">
+      <form id="login-form">
+        <div class="full">
+          <label>Email
+            <input id="email" type="email" placeholder="you@example.com" required/>
+          </label>
+        </div>
+        <div class="full">
+          <label>Password
+            <input id="password" type="password" placeholder="Your password" required/>
+          </label>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="cta">Login</button>
+          <a href="/" class="change-role">← Change role</a>
+        </div>
+      </form>
+    </section>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Create your account</title>
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<script src="{% static 'js/register.js' %}" defer></script>
+
+</head>
+<body class="auth-page register">
+  <form style="display:none">{% csrf_token %}</form>
+
+  <div class="shell">
+    <section class="left">
+      <div class="chip"><span class="dot"></span><span>Create your account</span></div>
+      <h1>Welcome, <span id="who">Freelancer</span></h1>
+      <p class="lead">Choose Login or Register. You can switch any time.</p>
+
+      <div class="pills">
+        <button class="pill" id="pill-login" type="button">Login</button>
+        <button class="pill is-active" id="pill-register" type="button">Register</button>
+      </div>
+    </section>
+
+    
+    <section class="right">
+      <form id="reg-form">
+        <div class="only-f full">
+          <label>Full name
+            <input id="f_name" placeholder="Your full name"/>
+          </label>
+        </div>
+        <div class="only-f full">
+          <label>Email
+            <input id="f_email" type="email" placeholder="you@example.com"/>
+          </label>
+        </div>
+        <div class="only-f">
+          <label>Password
+            <input id="f_password" type="password" placeholder="Create a password"/>
+          </label>
+        </div>
+        <div class="only-f">
+          <label>Confirm password
+            <input id="f_password2" type="password" placeholder="Repeat password"/>
+          </label>
+        </div>
+
+    
+        <div class="only-r">
+          <label>Company name
+            <input id="r_company" placeholder="Acme Inc."/>
+          </label>
+        </div>
+        <div class="only-r">
+          <label>Contact person
+            <input id="r_contact" placeholder="Jane Doe"/>
+          </label>
+        </div>
+        <div class="only-r full">
+          <label>Email
+            <input id="r_email" type="email" placeholder="you@company.com"/>
+          </label>
+        </div>
+        <div class="only-r">
+          <label>Password
+            <input id="r_password" type="password" placeholder="Create a password"/>
+          </label>
+        </div>
+        <div class="only-r">
+          <label>Confirm password
+            <input id="r_password2" type="password" placeholder="Repeat password"/>
+          </label>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="cta">Create account</button>
+          <a href="/" class="change-role">← Change role</a>
+        </div>
+      </form>
+    </section>
+  </div>
+
+
+</body>
+</html>
