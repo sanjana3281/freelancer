@@ -38,7 +38,6 @@ class FreelancerProfileForm(forms.ModelForm):
         if "work_authorization" in self.fields and not self.fields["work_authorization"].initial:
             self.fields["work_authorization"].initial = getattr(self.instance, "work_authorization", None) or "GLOBAL_REMOTE"
 
-# Child forms
 class FreelancerRoleForm(forms.ModelForm):
     class Meta:
         model = FreelancerRole
@@ -64,7 +63,6 @@ class PublicationForm(forms.ModelForm):
         model = Publication
         fields = ["title", "link", "description", "date"]
 
-# Project form with better widgets
 class FreelancerProjectForm(forms.ModelForm):
     class Meta:
         model = FreelancerProject
@@ -116,7 +114,6 @@ class PublicationForm(forms.ModelForm):
             "date": forms.DateInput(attrs={"type": "date"}),
         }
 
-# --- Base formsets that auto-delete fully blank rows ---
 class AchievementsBaseFormSet(BaseInlineFormSet):
     def clean(self):
         super().clean()
@@ -142,7 +139,7 @@ class PublicationsBaseFormSet(BaseInlineFormSet):
             if all(not form.cleaned_data.get(f) for f in fields):
                 form.cleaned_data["DELETE"] = True
 
-# Formsets
+
 RoleFormSet       = inlineformset_factory(FreelancerProfile, FreelancerRole, form=FreelancerRoleForm, extra=0, can_delete=True)
 SkillFormSet      = inlineformset_factory(FreelancerProfile, FreelancerSkill, form=FreelancerSkillForm, extra=0, can_delete=True)
 LanguageFormSet   = inlineformset_factory(FreelancerProfile, FreelancerLanguage, form=FreelancerLanguageForm, extra=0, can_delete=True)
@@ -152,7 +149,7 @@ AchievementFormSet = inlineformset_factory(
     Achievement,
     form=AchievementForm,
     formset=AchievementsBaseFormSet,
-    extra=1,                 # always one safe blank row
+    extra=1,                
     can_delete=True,
 )
 
@@ -193,7 +190,7 @@ class ProfileContactForm(forms.ModelForm):
 
 
 
-#recuiter 
+ 
 class RecruiterProfileForm(forms.ModelForm):
     class Meta:
         model = RecruiterProfile
@@ -206,7 +203,7 @@ class RecruiterProfileForm(forms.ModelForm):
 
 
 
-#job
+
 class JobForm(forms.ModelForm):
     class Meta:
         model = Job
@@ -219,12 +216,11 @@ class JobForm(forms.ModelForm):
             "application_deadline",
         ]
         widgets = {
-            # better UX for picking multiple skills
             "skills_required": forms.SelectMultiple(attrs={"size": 8}),
             "description": forms.Textarea(attrs={"rows": 6}),
         }
 
-    # a couple of validations
+    
     def clean(self):
         cleaned = super().clean()
         work_mode = cleaned.get("work_mode")
@@ -260,7 +256,7 @@ JobSkillFormSet = inlineformset_factory(
 
 
 #application
-# myapp/forms.py
+
 
 
 class ApplicationForm(forms.ModelForm):

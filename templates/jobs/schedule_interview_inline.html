@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container container-narrow mt-4">
+  <div class="can-card can-pad">
+    <div class="can-title">Schedule interview – {{ app.job.title }}</div>
+    <form method="post">
+      {% csrf_token %}
+      <div class="spacer-2"></div>
+      <label class="muted">Interview at (YYYY-MM-DD HH:MM)</label>
+      <input type="text" name="interview_at" class="form-control" placeholder="2025-10-05 15:30">
+
+      <div class="spacer-2"></div>
+      <label class="muted">Meeting link (optional)</label>
+      <input type="url" name="interview_link" class="form-control" placeholder="https://meet...">
+
+      <div class="spacer-2"></div>
+      <label class="muted">Message (optional)</label>
+      <textarea name="interview_message" class="form-control" rows="3"></textarea>
+
+      <div class="spacer-3"></div>
+      <button class="can-btn" type="submit">Save</button>
+      <a class="can-btn-outline" href="{% url 'job_applications' app.job.id %}">Cancel</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

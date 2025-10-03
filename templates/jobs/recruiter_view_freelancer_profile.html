@@ -3,7 +3,6 @@
 {% block head %}
   {{ block.super }}
   <style>
-    /* ====== THEME SAFETY ====== */
     :root {
       --bg: #07141b;
       --panel: #0c1d27;
@@ -18,7 +17,6 @@
       --success: #34d399;
     }
 
-    /* ====== LAYOUT UTILS ====== */
     .wrap { max-width: 1024px; margin: 0 auto; }
     .container-narrow { max-width: 980px; }
 
@@ -38,11 +36,9 @@
     .can-badge { display:inline-flex; align-items:center; gap:8px; padding:.48rem .8rem; border-radius:999px; background:var(--panel-2); color:var(--text); border:1px solid var(--border); text-decoration:none; font-weight:600; }
     .can-badge:hover { border-color: rgba(255,255,255,.25); }
 
-    /* ====== GRID ====== */
     .two-col { display:grid; grid-template-columns: minmax(0,2fr) minmax(0,1fr); gap:16px; align-items:start; }
     .stack { display:flex; flex-direction:column; gap:16px; }
 
-    /* ====== PROJECT TIMELINE ====== */
     .proj-section .h2 { font-size:20px; font-weight:800; color:var(--text); }
     .proj-list { display:flex; flex-direction:column; gap:14px; position:relative; }
     .proj-item { position:relative; padding:14px 14px 14px 18px; background:var(--panel-2); border:1px solid var(--border); border-radius:14px; }
@@ -58,7 +54,6 @@
     .badges { display:flex; gap:8px; margin-top:10px; }
     .badge { display:inline-flex; align-items:center; padding:.42rem .7rem; border-radius:999px; background:rgba(36,169,230,.12); color:#cfe8ff; border:1px solid rgba(75,208,255,.35); text-decoration:none; font-weight:700; font-size:12px; }
 
-    /* ====== RESPONSIVE ====== */
     @media (max-width: 900px) {
       .two-col { grid-template-columns: 1fr; }
     }
@@ -88,6 +83,12 @@
         {% if fp.availability %}<span class="can-chip">🟢 {{ fp.availability }}</span>{% endif %}
         {% if fp.city or fp.country %}<span class="can-chip">📍 {{ fp.city }} {{ fp.country }}</span>{% endif %}
       </div>
+      {% if job %}
+    <a class="can-btn" href="{% url 'flow_recruiter_shortlist' job.id fp.id %}">
+        ⭐ Shortlist for “{{ job.title }}”
+    </a>
+{% endif %}
+
     </div>
 
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -96,22 +97,17 @@
     </div>
   </div>
 
-  <!-- ===== 2-Column Layout ===== -->
   <div class="two-col">
 
-    <!-- ===== LEFT: Core Profile ===== -->
     <div class="stack">
 
-      <!-- About (rendered once) -->
       <div class="can-card can-pad">
         <div class="can-muted" style="font-size:12px;">About</div>
         <p style="line-height:1.7;margin-top:6px;">{{ fp.bio|default:"(no bio provided)"|linebreaks }}</p>
       </div>
 
-      <!-- Roles & Skills side-by-side -->
       <div class="can-card can-pad">
         <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;">
-          <!-- Roles -->
           <div>
             <div class="can-muted" style="font-size:12px;">Roles</div>
             {% with roles=fp.freelancerrole_set.all %}

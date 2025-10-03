@@ -2,47 +2,95 @@
 {% block content %}
 <div class="container container-narrow mt-4">
 
-  <div class="can-title" style="margin-bottom:8px;">Applicants — {{ job.title }}</div>
-  <div class="can-muted" style="margin-bottom:18px;">
-    {{ job.recruiter.recruiter.company_name }}
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <h2 class="can-title">Applications — {{ job.title }}</h2>
+    <a href="{% url 'my_jobs' %}" class="can-btn-outline">← Back to My Jobs</a>
   </div>
 
-  {% if apps %}
-    <div class="can-grid-1" style="gap:16px;">
-      {% for a in apps %}
-        <div class="can-card can-pad" style="display:flex;justify-content:space-between;align-items:center;">
-          <div style="display:flex;gap:14px;align-items:center;">
-            <div style="width:44px;height:44px;border-radius:12px;background:var(--chip);display:flex;align-items:center;justify-content:center;">
-              🧑‍💻
-            </div>
+  {% if applications %}
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      {% for app in applications %}
+        <div class="can-card can-pad" style="display:flex;flex-direction:column;gap:10px;">
+
+          <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
               <div style="font-weight:700;">
-                {{ a.freelancer.full_name|default:a.freelancer.freelancer.name }}
+                {{ app.freelancer.full_name|default:app.freelancer.freelancer.name }}
               </div>
               <div class="can-muted" style="font-size:13px;">
-                {{ a.freelancer.city }} {{ a.freelancer.country }}
-                {% if a.expected_salary %} • ₹{{ a.expected_salary }}{% endif %}
-                {% if a.availability_date %} • available {{ a.availability_date }}{% endif %}
+                Applied {{ app.created_at|date:"d M, H:i" }}
+                {% if app.freelancer.city or app.freelancer.country %}
+                  • {{ app.freelancer.city }} {{ app.freelancer.country }}
+                {% endif %}
+                {% if app.expected_salary %} • ₹{{ app.expected_salary }}{% endif %}
+                {% if app.availability_date %} • available {{ app.availability_date }}{% endif %}
               </div>
+            </div>
+
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <a class="can-btn-outline" href="{% url 'job_application_detail' app.id %}">Open</a>
+
+              <a class="can-btn-outline"
+                 href="{% url 'recruiter_view_freelancer_profile' app.freelancer.id %}?job={{ job.id }}">
+                 Profile
+              </a>
+
+              {% if app.resume_file %}
+                <a class="can-btn-outline" href="{{ app.resume_file.url }}" target="_blank" rel="noopener">Resume</a>
+              {% elif app.resume %}
+                <a class="can-btn-outline" href="{{ app.resume.url }}" target="_blank" rel="noopener">Resume</a>
+              {% endif %}
             </div>
           </div>
 
-          <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <a href="{% url 'job_application_detail' a.id %}" class="can-btn-outline">Open</a>
-            <a href="{% url 'recruiter_view_freelancer_profile' a.freelancer.id %}" class="can-btn-outline">Profile</a>
-            {% if a.resume %}
-              <a href="{{ a.resume.url }}" class="can-btn-outline" target="_blank" rel="noopener">Resume</a>
+          {% with flow=app.flow %}
+            {% if flow %}
+              {% if flow.stage == "SHORTLISTED" %}
+                <span class="can-badge">
+                  Awaiting response ({{ flow.shortlist_expires_at|date:"d M, H:i" }})
+                </span>
+
+              {% elif flow.stage == "SHORTLISTED_ACCEPTED" %}
+                <span class="can-badge">Accepted → schedule interview</span>
+                <a class="can-chip" href="{% url 'flow_recruiter_schedule_interview' app.id %}">
+                  Schedule interview
+                </a>
+
+              {% elif flow.stage == "SHORTLISTED_DECLINED" %}
+                <span class="can-badge">Declined</span>
+
+              {% elif flow.stage == "SHORTLIST_EXPIRED" %}
+                <span class="can-badge">Expired</span>
+
+              {% elif flow.stage == "INTERVIEW" %}
+                <span class="can-badge">Interview: {{ flow.interview_at|date:"d M, H:i" }}</span>
+                <a class="can-chip" href="{% url 'flow_recruiter_set_outcome' app.id 'hire' %}">Hire</a>
+                <a class="can-chip" href="{% url 'flow_recruiter_set_outcome' app.id 'reject' %}">Reject</a>
+
+              {% elif flow.stage == "HIRED" %}
+                <span class="can-badge">Hired</span>
+
+              {% elif flow.stage == "REJECTED" %}
+                <span class="can-badge">Rejected</span>
+              {% endif %}
+
+            {% else %}
+              <a class="can-btn" href="{% url 'flow_recruiter_shortlist' app.id %}">
+                ⭐ Shortlist
+              </a>
             {% endif %}
-          </div>
+          {% endwith %}
+
+          {% if app.cover_letter %}
+            <div class="can-muted" style="font-size:13px;line-height:1.6;">
+              {{ app.cover_letter|truncatechars:220 }}
+            </div>
+          {% endif %}
         </div>
       {% endfor %}
     </div>
   {% else %}
     <div class="can-card can-pad">No applications yet.</div>
   {% endif %}
-
-  <div style="margin-top:16px;">
-    <a class="can-btn-outline" href="{% url 'my_jobs' %}">← Back to My Jobs</a>
-  </div>
 </div>
 {% endblock %}

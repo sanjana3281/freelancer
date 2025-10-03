@@ -73,6 +73,65 @@
 
   <!-- Main -->
   <main class="main">
+    {#Invitations & Status #}
+{% if my_apps %}
+  {% for app in my_apps %}
+    {% with flow=app.flow %}
+      {% if flow %}
+        {% if flow.stage == "SHORTLISTED" %}
+          <section class="can-card can-pad-lg" style="margin-top:16px">
+            <div class="can-title" style="font-size:18px;margin:0 0 6px;">
+              Shortlisted for: {{ app.job.title }}
+            </div>
+            <div class="muted" style="margin-bottom:10px;">
+              Please respond before <b>{{ flow.shortlist_expires_at|date:"d M, H:i" }}</b>.
+            </div>
+            <div class="flex" style="display:flex;gap:10px;flex-wrap:wrap;">
+              <a class="can-btn" href="{% url 'flow_freelancer_respond' app.id 'accept' %}">I’m Interested</a>
+              <a class="can-btn" href="{% url 'flow_freelancer_respond' app.id 'decline' %}">Not Interested</a>
+              <a class="can-chip" href="{% url 'job_detail' app.job.id %}">View job →</a>
+            </div>
+          </section>
+
+        {% elif flow.stage == "INTERVIEW" %}
+          <section class="can-card can-pad-lg" style="margin-top:16px">
+            <div class="can-title" style="font-size:18px;margin:0 0 6px;">
+              Interview scheduled: {{ app.job.title }}
+            </div>
+            <div class="muted" style="margin-bottom:10px;">
+              When: <b>{{ flow.interview_at|date:"d M, H:i" }}</b>
+              {% if flow.interview_link %}
+                · Link: <a href="{{ flow.interview_link }}" target="_blank" rel="noopener">{{ flow.interview_link }}</a>
+              {% endif %}
+            </div>
+            {% if flow.interview_message %}
+              <div class="muted">{{ flow.interview_message }}</div>
+            {% endif %}
+          </section>
+
+        {% elif flow.stage == "HIRED" or flow.stage == "REJECTED" %}
+          <section class="can-card can-pad-lg" style="margin-top:16px">
+            <div class="can-title" style="font-size:18px;margin:0 0 6px;">
+              Outcome: {{ flow.stage|title }} — {{ app.job.title }}
+            </div>
+            <a class="can-chip" href="{% url 'job_detail' app.job.id %}">View job →</a>
+          </section>
+
+        {% elif flow.stage == "SHORTLISTED_DECLINED" %}
+          <section class="can-card can-pad-lg" style="margin-top:16px">
+            <div class="muted">You declined the shortlist for <b>{{ app.job.title }}</b>.</div>
+          </section>
+
+        {% elif flow.stage == "SHORTLIST_EXPIRED" %}
+          <section class="can-card can-pad-lg" style="margin-top:16px">
+            <div class="muted">Shortlist expired for <b>{{ app.job.title }}</b>.</div>
+          </section>
+        {% endif %}
+      {% endif %}
+    {% endwith %}
+  {% endfor %}
+{% endif %}
+
     <!-- About -->
     <section class="can-card can-pad-lg">
       <h3 class="section-title">About</h3>
@@ -240,4 +299,3 @@
   </main>
 </div>
 {% endblock %}
-

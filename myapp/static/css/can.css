@@ -240,16 +240,13 @@ body.can-dark{
 .chips{ display:flex; flex-wrap:wrap; gap:10px; margin:12px 0; }
 .can-chip{ background: rgba(255,255,255,.06); border:1px solid var(--border); color:#dbe7ff; padding:8px 12px; border-radius:12px; font-size:12px; }
 
-/* ===== About facts grid spacing ===== */
 .about-grid{ display:grid; grid-template-columns: repeat(4,1fr); gap:16px; margin-top:12px; }
 @media (max-width: 1100px){ .about-grid{ grid-template-columns: repeat(2,1fr);} }
 
-/* ===== Timeline spacing ===== */
 .timeline .tl-card{ border-radius:16px; }
 .tl-item + .tl-item{ margin-top:18px; }
 
 
-/* --- form errors --- */
 .can-alert-error{
   background:#2a0d0d; border:1px solid #6b2a2a; color:#ffb3b3;
   padding:12px 14px; border-radius:12px; margin:10px 0 18px;
@@ -282,7 +279,6 @@ body.can-dark{
 }
 
 
-/* ---------- Browse Jobs CTA ---------- */
 .cta-card{
   position: relative;
   display: flex;

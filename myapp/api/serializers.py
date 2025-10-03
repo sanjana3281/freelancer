@@ -43,7 +43,6 @@ class RecruiterSerializer(serializers.ModelSerializer):
 
 
 
-# --- Simple lookup serializers (Role/Skill/Language) ---
 
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -60,7 +59,6 @@ class LanguageSerializer(serializers.ModelSerializer):
         model = Language
         fields = ["id", "name"]
 
-# --- Through models bound to the user's profile ---
 
 class FreelancerRoleSerializer(serializers.ModelSerializer):
     role = RoleSerializer(read_only=True)
@@ -110,7 +108,6 @@ class FreelancerProjectSerializer(serializers.ModelSerializer):
 # --- Profile serializer ---
 
 class FreelancerProfileSerializer(serializers.ModelSerializer):
-    # read-only nested views for convenience
     roles = FreelancerRoleSerializer(source="freelancerrole_set", many=True, read_only=True)
     skills = FreelancerSkillSerializer(source="freelancerskill_set", many=True, read_only=True)
     languages = FreelancerLanguageSerializer(source="freelancerlanguage_set", many=True, read_only=True)
@@ -131,7 +128,6 @@ class FreelancerProfileSerializer(serializers.ModelSerializer):
             "publications_link", "portfolio_link",
             "avg_response_time_hours",
             "created_at", "updated_at",
-            # nested readbacks
             "roles", "skills", "languages", "achievements", "publications", "projects",
         ]
         read_only_fields = ["created_at", "updated_at", "avg_response_time_hours"]
@@ -148,7 +144,6 @@ from myapp.models import Recruiter, RecruiterProfile
 class RecruiterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recruiter
-        # adapt to your Recruiter fields
         fields = ["id", "company_name", "email", "contact_name"]
 
 class RecruiterProfileSerializer(serializers.ModelSerializer):

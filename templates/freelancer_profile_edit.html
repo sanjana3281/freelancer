@@ -406,7 +406,6 @@ td{background:#0f1a2f;border:1px solid #213053;padding:6px 8px} tr td:first-chil
     wrap.innerHTML = html.trim();
     const row = wrap.firstElementChild;
 
-    // Ensure every element’s name/id uses the new index
     row.querySelectorAll("[name]").forEach(el => {
       el.name = el.name.replace(/__prefix__/g, index);
       if (el.id) el.id = el.id.replace(/__prefix__/g, index);

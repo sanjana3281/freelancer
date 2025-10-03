@@ -7,22 +7,23 @@ from .forms import FreelancerProfileForm
 from django.contrib.auth.hashers import check_password
 from django.urls import reverse
 from django.db import transaction
-from .models import FreelancerProfile,Recruiter, RecruiterProfile,Job,Application
+from .models import FreelancerProfile,Recruiter, RecruiterProfile,Job,Application,ApplicationFlow
 from .forms import (
     ProfileBasicsForm, ProfileContactForm,JobForm, JobSkillFormSet,
     RoleFormSet, SkillFormSet, LanguageFormSet,
     AchievementFormSet, PublicationFormSet, ProjectFormSet,RecruiterProfileForm,ApplicationForm
 )
-
+from django.utils import timezone
+from datetime import datetime
 from django.db.models import Prefetch
-
 from django.utils.http import urlencode
 from django.db.models import Q
-
-
-from django.shortcuts import render
 from django.http import JsonResponse
-
+from .models import (
+    Freelancer, FreelancerProfile,
+    FreelancerProject, Achievement, Publication,
+    Application
+)
 def whoami(request):
     return JsonResponse({
         "session_key": request.session.session_key,
@@ -33,13 +34,11 @@ def whoami(request):
 
 
 def login_page(request):
-    # role comes from ?role=recruiter or ?role=freelancer, default = freelancer
     role = (request.GET.get("role") or "freelancer").lower()
     if role not in ("freelancer", "recruiter"):
         role = "freelancer"
     return render(request, "login.html", {"role": role})
 
-# ---- helper: require logged-in freelancer ----
 def _require_freelancer(request):
     """Return (freelancer, profile) or redirect to login."""
     if request.session.get("role") != "freelancer" or not request.session.get("freelancer_id"):
@@ -49,26 +48,17 @@ def _require_freelancer(request):
     profile, _ = FreelancerProfile.objects.get_or_create(freelancer=f)
     return f, profile
 
-# ========== AUTH (very simple session-based example) ==========
 @require_http_methods(["GET", "POST"])
 def login_view(request):
-    """
-    Minimal example:
-    - Accepts email + password fields from your login form.
-    - On success sets session keys and redirects to freelancer dashboard.
-    Replace with your real password check / hashing as needed.
-    """
     if request.method == "POST":
         email = request.POST.get("email", "").strip().lower()
         password = request.POST.get("password", "")
-
-        # TODO: replace this with your real authentication
         try:
             freelancer = Freelancer.objects.get(email=email)
         except Freelancer.DoesNotExist:
             freelancer = None
 
-        if freelancer and freelancer.password == password:  # <-- replace with proper hash check
+        if freelancer and freelancer.password == password: 
             request.session["role"] = "freelancer"
             request.session["freelancer_id"] = freelancer.id
             messages.success(request, f"Welcome, {freelancer.name}!")
@@ -81,7 +71,7 @@ def logout_view(request):
     request.session.flush()
     return redirect("login")
 
-# ========== PAGES ==========
+
 def freelancer_dashboard(request):
     """Show ONLY the logged-in freelancer’s info, with Edit button."""
     freelancer, profile = _require_freelancer(request)
@@ -112,10 +102,10 @@ def freelancer_profile_edit(request):
         "freelancer": freelancer,
         "form": form,
     })
-def freelancer_login_page(request):           # GET /login/
+def freelancer_login_page(request):           
     return render(request, "login.html")
 
-@require_http_methods(["POST"])               # POST /login/submit/
+@require_http_methods(["POST"])               
 def freelancer_login(request):
     email = (request.POST.get("email") or "").strip().lower()
     password = request.POST.get("password") or ""
@@ -126,19 +116,18 @@ def freelancer_login(request):
         messages.error(request, "Invalid email or password.")
         return redirect("freelancer_login")
 
-    # replace with your own check if you don’t hash passwords
     if hasattr(freelancer, "password") and not check_password(password, freelancer.password):
         messages.error(request, "Invalid email or password.")
         return redirect("freelancer_login")
 
-    request.session["freelancer_id"] = freelancer.id   # <-- critical
+    request.session["freelancer_id"] = freelancer.id   
     return redirect("freelancer_dashboard")
 
 def logout_view(request):
-    request.session.flush()   # clears all session data
-    return redirect("login")  # or wherever you want to send them
+    request.session.flush()  
+    return redirect("login")  
 def freelancer_dashboard(request):
-    # assume you store the freelancer_id in session after login
+    
     freelancer_id = request.session.get("freelancer_id")
     if not freelancer_id:
         return redirect("login")
@@ -258,226 +247,6 @@ def recruiter_profile_edit(request):
 
 
 
-
-
-#job
-# def recruiter_required(view_fn):
-#     def _wrapped(request, *args, **kwargs):
-#         if request.session.get("role") != "recruiter" or not request.session.get("recruiter_id"):
-#             return redirect("login_page")   # instead of "login"
-#         return view_fn(request, *args, **kwargs)
-#     return _wrapped
-
-# @recruiter_required
-# def job_create_view(request):
-#     recruiter = Recruiter.objects.get(id=request.session["recruiter_id"])
-#     rp = getattr(recruiter, "profile", None)
-#     if rp is None:
-#         messages.error(request, "Please create your Recruiter Profile first.")
-#         return redirect("create_profile")
-
-#     if request.method == "POST":
-#         form = JobForm(request.POST)
-#         formset = JobSkillFormSet(request.POST)
-#         if form.is_valid() and formset.is_valid():
-#             job = form.save(commit=False)
-#             job.recruiter = rp
-#             job.save()
-
-#             # attach formset to the saved job and save skills
-#             formset.instance = job
-#             # OPTIONAL validation: require at least one MUST_HAVE
-#             musts = 0
-#             for f in formset.forms:
-#                 if f.cleaned_data.get("DELETE"):
-#                     continue
-#                 if f.cleaned_data.get("importance") == "MUST_HAVE":
-#                     musts += 1
-#             if musts == 0 and formset.total_form_count() > 0:
-#                 # simple inline validation message
-#                 messages.error(request, "Please add at least one Must-have skill.")
-#                 # re-render with bound data
-#                 return render(request, "jobs/job_form.html", {"form": form, "formset": formset})
-
-#             formset.save()
-#             messages.success(request, "Job posted successfully.")
-#             return redirect("my_jobs")
-#     else:
-#         form = JobForm()
-#         formset = JobSkillFormSet()
-
-#     return render(request, "jobs/job_form.html", {"form": form, "formset": formset})
-
-
-# @recruiter_required
-# def my_jobs_view(request):
-#     recruiter = Recruiter.objects.get(id=request.session["recruiter_id"])
-#     rp = getattr(recruiter, "profile", None)
-#     jobs = Job.objects.filter(recruiter=rp).order_by("-posted_at")
-#     return render(request, "jobs/my_jobs.html", {"jobs": jobs})
-
-# # views.py
-# from django.db.models import Q
-# from django.shortcuts import render, redirect
-
-# def jobs_list_view(request):
-#     # If a recruiter visits the public list, send to "My Jobs"
-#     if request.session.get("role") == "recruiter":
-#         return redirect("my_jobs")
-
-#     qs = (Job.objects
-#             .filter(is_active=True)
-#             .select_related("recruiter", "recruiter__recruiter")
-#             .order_by("-posted_at"))
-
-#     q = (request.GET.get("q") or "").strip()
-#     if q:
-#         qs = qs.filter(Q(title__icontains=q) | Q(description__icontains=q))
-
-#     return render(request, "jobs/jobs_list.html", {"jobs": qs, "q": q})
-
-
-
-# def job_detail_view(request, job_id):
-#     job = Job.objects.get(id=job_id, is_active=True)
-#     return render(request, "jobs/job_detail.html", {"job": job})
-
-# @recruiter_required
-# def job_toggle_active_view(request, job_id):
-#     recruiter = Recruiter.objects.get(id=request.session["recruiter_id"])
-#     rp = getattr(recruiter, "profile", None)
-#     job = Job.objects.get(id=job_id, recruiter=rp)  # ensures ownership
-#     job.is_active = not job.is_active
-#     job.save(update_fields=["is_active"])
-#     return redirect("my_jobs")
-
-
-
-# def recruiter_required(view_fn):
-#     def _wrapped(request, *args, **kwargs):
-#         if request.session.get("role") != "recruiter" or not request.session.get("recruiter_id"):
-#             return redirect("login")
-#         return view_fn(request, *args, **kwargs)
-#     return _wrapped
-
-# @recruiter_required
-# def job_edit_view(request, job_id):
-#     recruiter = Recruiter.objects.get(id=request.session["recruiter_id"])
-#     rp = getattr(recruiter, "profile", None)
-#     if rp is None:
-#         messages.error(request, "Please create your Recruiter Profile first.")
-#         return redirect("create_profile")
-
-#     job = get_object_or_404(Job, id=job_id, recruiter=rp)
-
-#     if request.method == "POST":
-#         form = JobForm(request.POST, instance=job)
-#         formset = JobSkillFormSet(request.POST, instance=job)  # ← includes current skills
-#         if form.is_valid() and formset.is_valid():
-#             obj = form.save(commit=False)
-#             obj.recruiter = rp
-#             obj.save()
-
-#             # optional: require ≥1 MUST_HAVE
-#             musts = sum(
-#                 1 for f in formset.forms
-#                 if not f.cleaned_data.get("DELETE") and f.cleaned_data.get("importance") == "MUST_HAVE"
-#             )
-#             if musts == 0 and formset.total_form_count() > 0:
-#                 messages.error(request, "Please add at least one Must-have skill.")
-#                 return render(request, "jobs/job_form.html", {"form": form, "formset": formset, "mode": "edit"})
-
-#             formset.save()
-#             messages.success(request, "Job updated.")
-#             return redirect("my_jobs")
-#     else:
-#         form = JobForm(instance=job)
-#         formset = JobSkillFormSet(instance=job)  # ← pre-fills existing skills
-
-#     return render(request, "jobs/job_form.html", {"form": form, "formset": formset, "mode": "edit"})
-
-
-# # ---------- LIST (public / freelancer) ----------
-# def jobs_list_view(request):
-#     qs = Job.objects.filter(is_active=True).select_related("recruiter", "recruiter__recruiter").order_by("-posted_at")
-
-#     # simple filters (optional)
-#     q = request.GET.get("q", "").strip()
-#     if q:
-#         qs = qs.filter(title__icontains=q) | qs.filter(description__icontains=q)
-
-#     return render(request, "jobs/jobs_list.html", {"jobs": qs})
-
-# # ---------- DETAIL (public / freelancer) ----------
-# def job_detail_view(request, job_id):
-#     job = get_object_or_404(Job.objects.select_related("recruiter", "recruiter__recruiter"), id=job_id)
-#     applied = False
-#     if request.session.get("role") == "freelancer" and request.session.get("freelancer_id"):
-#         try:
-#             fp = FreelancerProfile.objects.get(freelancer_id=request.session["freelancer_id"])
-#             applied = Application.objects.filter(job=job, freelancer=fp).exists()
-#         except FreelancerProfile.DoesNotExist:
-#             applied = False
-
-#     return render(request, "jobs/job_detail.html", {"job": job, "applied": applied})
-
-# # ---------- APPLY (freelancer only) ----------
-# def freelancer_required(view_fn):
-#     def _wrapped(request, *args, **kwargs):
-#         if request.session.get("role") != "freelancer" or not request.session.get("freelancer_id"):
-#             messages.error(request, "Please login as a freelancer to apply.")
-#             return redirect("login")
-#         return view_fn(request, *args, **kwargs)
-#     return _wrapped
-
-# @freelancer_required
-# def job_apply_view(request, job_id):
-#     job = get_object_or_404(Job, id=job_id, is_active=True)
-
-#     # require freelancer profile
-#     fid = request.session["freelancer_id"]
-#     freelancer = get_object_or_404(Freelancer, id=fid)
-#     try:
-#         fp = freelancer.profile
-#     except FreelancerProfile.DoesNotExist:
-#         messages.error(request, "Please complete your Freelancer Profile before applying.")
-#         return redirect(f"{reverse('freelancer_profile_create')}?{urlencode({'step': '1'})}")
-
-#     # block duplicate applications
-#     if Application.objects.filter(job=job, freelancer=fp).exists():
-#         messages.info(request, "You already applied to this job.")
-#         return redirect("job_detail", job_id=job.id)
-
-#     if request.method == "POST":
-#         form = ApplicationForm(request.POST, request.FILES)
-#         if form.is_valid():
-#             app = form.save(commit=False)
-#             app.job = job
-#             app.freelancer = fp
-#             app.save()
-
-#             # email recruiter
-#             _email_recruiter_new_application(app, request)
-#             messages.success(request, "Application submitted!")
-#             return redirect("job_detail", job_id=job.id)
-#     else:
-#         form = ApplicationForm()
-
-#     return render(request, "jobs/job_apply.html", {"job": job, "form": form})
-
-
-# @recruiter_required
-# def my_jobs_view(request):
-#     recruiter = Recruiter.objects.get(id=request.session["recruiter_id"])
-#     rp = getattr(recruiter, "profile", None)
-#     jobs = Job.objects.filter(recruiter=rp).order_by("-posted_at")
-#     return render(request, "jobs/my_jobs.html", {"jobs": jobs})
-
-# views.py
-
-
-# --- decorators --------------------------------------------------------------
-
 def recruiter_required(view_fn):
     def _wrapped(request, *args, **kwargs):
         if request.session.get("role") != "recruiter" or not request.session.get("recruiter_id"):
@@ -494,7 +263,6 @@ def freelancer_required(view_fn):
         return view_fn(request, *args, **kwargs)
     return _wrapped
 
-# --- recruiter: create / list mine / toggle / edit --------------------------
 
 @recruiter_required
 def job_create_view(request):
@@ -514,7 +282,6 @@ def job_create_view(request):
 
             formset.instance = job
 
-            # optional: require at least one MUST_HAVE
             musts = sum(
                 1 for f in formset.forms
                 if not f.cleaned_data.get("DELETE") and f.cleaned_data.get("importance") == "MUST_HAVE"
@@ -533,27 +300,19 @@ def job_create_view(request):
     return render(request, "jobs/job_form.html", {"form": form, "formset": formset})
 
 
-# @recruiter_required
-# def my_jobs_view(request):
-#     recruiter = Recruiter.objects.get(id=request.session["recruiter_id"])
-#     rp = getattr(recruiter, "profile", None)
-#     jobs = Job.objects.filter(recruiter=rp).order_by("-posted_at")
-#     return render(request, "jobs/my_jobs.html", {"jobs": jobs})
-# myapp/views.py
+
 @recruiter_required
 def my_jobs_view(request):
     recruiter = Recruiter.objects.get(id=request.session["recruiter_id"])
     rp = getattr(recruiter, "profile", None)
 
-    # make it a list so we can add attributes on each object
     jobs = list(Job.objects.filter(recruiter=rp).order_by("-posted_at"))
 
-    # attach a safe applicants count regardless of related_name
     for j in jobs:
         try:
-            j.apps_count = j.applications.count()       # if you set related_name="applications"
+            j.apps_count = j.applications.count()      
         except AttributeError:
-            j.apps_count = j.application_set.count()    # Django’s default reverse name
+            j.apps_count = j.application_set.count()    
 
     return render(request, "jobs/my_jobs.html", {"jobs": jobs})
 
@@ -604,10 +363,8 @@ def job_edit_view(request, job_id):
 
     return render(request, "jobs/job_form.html", {"form": form, "formset": formset, "mode": "edit"})
 
-# --- public / freelancer: list all & detail ---------------------------------
 
 def jobs_list_view(request):
-    # keep recruiters in their area
     if request.session.get("role") == "recruiter":
         return redirect("my_jobs")
 
@@ -625,38 +382,33 @@ def jobs_list_view(request):
 
 
 
-# ---- PUBLIC / FREELANCER: LIST ALL JOBS ----
 def jobs_list_view(request):
-    # Keep recruiters in their own area
     if request.session.get("role") == "recruiter":
         return redirect("my_jobs")
 
     qs = (Job.objects
-            .filter(is_active=True)  # show ALL active jobs
+            .filter(is_active=True) 
             .select_related("recruiter", "recruiter__recruiter")
             .order_by("-posted_at"))
 
     q = (request.GET.get("q") or "").strip()
     if q:
-        # IMPORTANT: use Q(...) instead of union (|) of QuerySets
         qs = qs.filter(Q(title__icontains=q) | Q(description__icontains=q))
 
     return render(request, "jobs/jobs_list.html", {"jobs": qs, "q": q})
 
 
-# ---- PUBLIC / FREELANCER: JOB DETAIL WITH CLEAR FLAGS ----
 def job_detail_view(request, job_id):
     job = get_object_or_404(
         Job.objects.select_related("recruiter", "recruiter__recruiter"),
         id=job_id
     )
 
-    # compute flags for the template
     is_freelancer = (request.session.get("role") == "freelancer" and
                      bool(request.session.get("freelancer_id")))
     applied = False
     can_apply = False
-    why_cant_apply = None  # "closed" | "applied" | "no_profile" | "not_logged_in"
+    why_cant_apply = None 
 
     if not job.is_active:
         why_cant_apply = "closed"
@@ -687,7 +439,6 @@ def job_detail_view(request, job_id):
         },
     )
 
-# --- apply (freelancer only) -------------------------------------------------
 
 def freelancer_required(view_fn):
     def _wrapped(request, *args, **kwargs):
@@ -709,7 +460,6 @@ def job_apply_view(request, job_id):
         messages.error(request, "Please complete your Freelancer Profile before applying.")
         return redirect(f"{reverse('freelancer_profile_create')}?{urlencode({'step': '1'})}")
 
-    # Block duplicates at UI layer (DB also blocks via unique_together)
     if Application.objects.filter(job=job, freelancer=fp).exists():
         messages.info(request, "You already applied to this job.")
         return redirect("job_detail", job_id=job.id)
@@ -734,28 +484,17 @@ def job_apply_view(request, job_id):
 
 
 #for recuiter
-# ---------- APPLICANTS LIST (for one job) ----------
 @recruiter_required
 def job_applications_view(request, job_id):
-    recruiter = Recruiter.objects.get(id=request.session["recruiter_id"])
-    rp = getattr(recruiter, "profile", None)
-
-    # only allow if the job belongs to this recruiter profile
-    job = get_object_or_404(
-        Job.objects.select_related("recruiter", "recruiter__recruiter"),
-        id=job_id, recruiter=rp
-    )
-
-    apps = (
-        Application.objects
-        .filter(job=job)
-        .select_related("freelancer", "freelancer__freelancer")   # profile + base user
-        .order_by("-created_at")
-    )
-
+    r = Recruiter.objects.get(id=request.session["recruiter_id"])
+    rp = r.profile
+    job = get_object_or_404(Job, id=job_id, recruiter=rp)
+    apps = (Application.objects
+              .filter(job=job)
+              .select_related("freelancer__freelancer"))
     return render(request, "jobs/job_applications.html", {
         "job": job,
-        "apps": apps,
+        "applications": apps,   # <-- name matches template
     })
 
 
@@ -769,7 +508,7 @@ def job_application_detail_view(request, app_id):
         Application.objects.select_related(
             "job", "job__recruiter", "freelancer", "freelancer__freelancer"
         ),
-        id=app_id, job__recruiter=rp,   # ensures ownership
+        id=app_id, job__recruiter=rp,   
     )
 
     return render(request, "jobs/job_application_detail.html", {
@@ -777,12 +516,167 @@ def job_application_detail_view(request, app_id):
     })
 
 
-# ---------- (Optional) SIMPLE PUBLIC VIEW OF A FREELANCER PROFILE ----------
+
 @recruiter_required
 def recruiter_view_freelancer_profile(request, profile_id):
-    fp = get_object_or_404(
-        FreelancerProfile.objects.select_related("freelancer"),
-        id=profile_id
-    )
-    return render(request, "jobs/recruiter_view_freelancer_profile.html", {"fp": fp})
+    recruiter = Recruiter.objects.get(id=request.session["recruiter_id"])
+    rp = getattr(recruiter, "profile", None)
+    fp = get_object_or_404(FreelancerProfile, id=profile_id)
 
+    job = None
+    job_id = request.GET.get("job")
+    if job_id:
+        job = get_object_or_404(Job, id=job_id, recruiter=rp)
+
+    return render(request, "jobs/recruiter_view_freelancer_profile.html", {"fp": fp, "job": job})
+
+
+
+
+
+
+
+
+#commuication
+
+
+
+
+def _parse_when(when_str: str):
+   
+    when_str = (when_str or "").strip().replace("T", " ")
+    return timezone.make_aware(datetime.strptime(when_str, "%Y-%m-%d %H:%M"))
+
+
+@recruiter_required
+def flow_recruiter_shortlist(request, app_id):
+    from django.utils import timezone
+    app = get_object_or_404(
+        Application.objects.select_related("job__recruiter"),
+        id=app_id,
+        job__recruiter__recruiter_id=request.session["recruiter_id"],
+    )
+    flow, created = ApplicationFlow.objects.get_or_create(
+        application=app,
+        defaults={
+            "stage": "SHORTLISTED",
+            "shortlist_expires_at": timezone.now() + timezone.timedelta(hours=72),
+        },
+    )
+    if not created and flow.stage != "SHORTLISTED":
+        flow.stage = "SHORTLISTED"
+        flow.shortlist_expires_at = timezone.now() + timezone.timedelta(hours=72)
+        flow.save(update_fields=["stage", "shortlist_expires_at"])
+    messages.success(request, "Candidate shortlisted.")
+    return redirect("job_applications", job_id=app.job.id)
+
+
+
+@recruiter_required
+def flow_recruiter_schedule_interview(request, app_id):
+    recruiter = Recruiter.objects.get(id=request.session["recruiter_id"])
+    rp = getattr(recruiter, "profile", None)
+    app = get_object_or_404(Application.objects.select_related("job"), id=app_id, job__recruiter=rp)
+    flow, _ = ApplicationFlow.objects.get_or_create(application=app)
+
+    if flow.stage not in ("SHORTLISTED_ACCEPTED", "INTERVIEW"):
+        messages.error(request, "Interview can be scheduled only after candidate accepts.")
+        return redirect("job_applications", job_id=app.job.id)
+
+    if request.method == "POST":
+        when = _parse_when(request.POST.get("when"))
+        link = (request.POST.get("link") or "").strip()
+        msg  = (request.POST.get("message") or "").strip()
+
+        flow.schedule_interview(when, link, msg)
+        flow.save()
+        messages.success(request, "Interview scheduled.")
+        return redirect("job_applications", job_id=app.job.id)
+
+    return render(request, "jobs/schedule_interview.html", {"app": app, "flow": flow})
+
+
+@recruiter_required
+def flow_recruiter_set_outcome(request, app_id, decision):
+    recruiter = Recruiter.objects.get(id=request.session["recruiter_id"])
+    rp = getattr(recruiter, "profile", None)
+    app = get_object_or_404(Application.objects.select_related("job"), id=app_id, job__recruiter=rp)
+    flow, _ = ApplicationFlow.objects.get_or_create(application=app)
+
+    if decision not in ("hire", "reject"):
+        messages.error(request, "Invalid outcome.")
+        return redirect("job_applications", job_id=app.job.id)
+
+    flow.set_outcome(hired=(decision == "hire"))
+    flow.save()
+    messages.success(request, f"Marked as {flow.stage.lower()}.")
+    return redirect("job_applications", job_id=app.job.id)
+
+
+@freelancer_required
+def flow_freelancer_respond(request, app_id, decision):
+    fp = FreelancerProfile.objects.get(freelancer_id=request.session["freelancer_id"])
+    app = get_object_or_404(Application, id=app_id, freelancer=fp)
+    flow, _ = ApplicationFlow.objects.get_or_create(application=app)
+
+    flow.mark_expired_if_needed()
+    if flow.stage == "SHORTLIST_EXPIRED":
+        messages.error(request, "This shortlist has expired.")
+        return redirect("freelancer_dashboard")
+
+    if flow.stage != "SHORTLISTED":
+        messages.error(request, "This application is not awaiting your response.")
+        return redirect("freelancer_dashboard")
+
+    if decision == "accept":
+        flow.accepted()
+        flow.save()
+        messages.success(request, "Thanks! The recruiter will schedule an interview.")
+    elif decision == "decline":
+        flow.declined()
+        flow.save()
+        messages.info(request, "You declined this shortlist.")
+    else:
+        messages.error(request, "Invalid decision.")
+
+    return redirect("freelancer_dashboard")
+
+
+
+
+@freelancer_required
+def freelancer_dashboard(request):
+    fid = request.session.get("freelancer_id")
+    freelancer = get_object_or_404(Freelancer, id=fid)
+
+    profile, _ = FreelancerProfile.objects.get_or_create(freelancer=freelancer)
+
+    fp = (
+        FreelancerProfile.objects
+        .filter(pk=profile.pk)
+        .select_related("freelancer")
+        .prefetch_related(
+            # change names here if you set related_name on your FKs
+            Prefetch("freelancerproject_set", queryset=FreelancerProject.objects.order_by("-id")),
+            Prefetch("achievement_set", queryset=Achievement.objects.order_by("-id")),
+            Prefetch("publication_set", queryset=Publication.objects.order_by("-id")),
+        )
+        .first()
+    )
+
+    my_apps = (
+        Application.objects
+        .filter(freelancer=fp)
+        .select_related("job", "job__recruiter", "flow")   
+        .order_by("-created_at")
+    )
+
+    context = {
+        "freelancer": freelancer,
+        "profile": fp,  
+        "projects": list(fp.freelancerproject_set.all()),
+        "achievements": list(fp.achievement_set.all()),
+        "publications": list(fp.publication_set.all()),
+        "my_apps": my_apps,
+    }
+    return render(request, "freelancer_dashboard.html", context)

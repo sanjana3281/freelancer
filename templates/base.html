@@ -13,7 +13,7 @@
   <style>.container-narrow{ max-width:980px; }</style>
   {% block head %}{% endblock %}
   <script src="{% static 'js/formset.js' %}"></script>
-</head>  {# <-- was missing #}
+</head>  
 
 <body class="can-dark">
   <!-- Top nav -->
@@ -32,10 +32,10 @@
       <div class="d-flex gap-3">
        {% if request.session.role == "freelancer" %}
             <a class="nav-link text-light" href="{% url 'freelancer_dashboard' %}">My Profile</a>
-            <a class="nav-link text-light" href="{% url 'jobs_list' %}">Jobs</a>   {# all jobs #}
+            <a class="nav-link text-light" href="{% url 'jobs_list' %}">Jobs</a>   
         {% elif request.session.role == "recruiter" %}
             <a class="nav-link text-light" href="{% url 'recruiter_profile_detail' %}">Profile</a>
-            <a class="nav-link text-light" href="{% url 'my_jobs' %}">My Jobs</a>  {# only mine #}
+            <a class="nav-link text-light" href="{% url 'my_jobs' %}">My Jobs</a>  
             <a class="nav-link text-light" href="{% url 'job_create' %}">Post Job</a>
         {% endif %}
 

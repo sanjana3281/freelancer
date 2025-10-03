@@ -3,7 +3,6 @@
 
 {% block head %}
 <style>
-  /* ===== Apply page — local styles (dark, matches your forms) ===== */
   .apply-hero{
     background:
       radial-gradient(1200px 400px at 20% -10%, rgba(67,127,255,.25), transparent),
@@ -18,13 +17,11 @@
   .apply-hero__company{color:var(--muted, #94a3b8)}
   .apply-hero__chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 
-  /* Form shell to scope styles */
   .can-form .field{margin-bottom:16px}
   .can-form .field__label{display:block;font-weight:600;margin-bottom:6px;font-size:14px;color:var(--muted, #94a3b8)}
   .can-form .hint{color:var(--muted, #94a3b8);font-size:12px;margin-top:6px}
   .can-form .err{color:#ff6b6b;font-size:12px;margin-top:6px}
 
-  /* Inputs — dark look everywhere without add_class */
   .can-form input,
   .can-form textarea,
   .can-form select{
@@ -46,7 +43,6 @@
     box-shadow:0 0 0 3px rgba(90,142,255,.15);
   }
 
-  /* Date input — make the popup dark + icon visible */
   .can-form input[type="date"]{
     color-scheme: dark;
   }
@@ -54,7 +50,6 @@
     filter: invert(1) opacity(.85);
   }
 
-  /* Native file input can still show white; provide a custom picker */
   .filepicker{position:relative;display:flex;align-items:center;gap:12px}
   .filepicker input[type="file"]{
     position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;
@@ -68,11 +63,9 @@
   }
   .btn-ghost:hover{background:rgba(255,255,255,.06)}
 
-  /* Grid rows like your edit forms */
   .row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   @media (max-width:720px){ .row-2{grid-template-columns:1fr} }
 
-  /* Action buttons */
   .actions{display:flex;gap:12px;margin-top:8px}
   .can-btn{padding:.8rem 1.2rem;border-radius:12px}
   .can-btn-outline{padding:.8rem 1.2rem;border-radius:12px}
@@ -133,7 +126,6 @@
         <div class="field">
           <label class="field__label">{{ form.resume.label }}</label>
 
-          <!-- Custom dark file picker (keeps native input for the form) -->
           <div class="filepicker">
             {{ form.resume }}
             <button type="button" class="btn-ghost" id="pick-file-btn">Choose File</button>
@@ -146,7 +138,6 @@
       </div>
     </div>
 
-    <!-- LOGISTICS -->
     <div class="can-card can-pad-lg" style="margin-bottom:14px;">
       <div class="can-title" style="font-size:18px;margin-bottom:12px;">Logistics</div>
 
@@ -178,7 +169,6 @@
   </form>
 </div>
 
-<!-- tiny helper to drive the custom file button -->
 <script>
   (function () {
     const picker = document.querySelector('.filepicker');

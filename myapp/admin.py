@@ -10,7 +10,7 @@ from .models import (
     Achievement, Publication, FreelancerProject,
 )
 
-# ---------- Lookup models ----------
+
 @admin.register(Role)
 class RoleAdmin(admin.ModelAdmin):
     search_fields = ("name",)
@@ -23,12 +23,10 @@ class SkillAdmin(admin.ModelAdmin):
 class LanguageAdmin(admin.ModelAdmin):
     search_fields = ("name",)
 
-# ---------- Inlines bound to FreelancerProfile ----------
 class FreelancerRoleInline(admin.TabularInline):
     model = FreelancerRole
     extra = 1
     autocomplete_fields = ("role",)
-    # unique_together (freelancer, role) is enforced at DB; admin will show error on duplicate
 
 class FreelancerSkillInline(admin.TabularInline):
     model = FreelancerSkill
@@ -63,7 +61,6 @@ class FreelancerProjectInline(admin.StackedInline):
         }),
     )
 
-# ---------- Profile admin with all inlines ----------
 @admin.register(FreelancerProfile)
 class FreelancerProfileAdmin(admin.ModelAdmin):
     list_display = (

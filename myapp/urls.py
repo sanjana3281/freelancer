@@ -28,21 +28,30 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     
 
-    
-
-
-
-    # Recruiter → see applicants for a job they own
     path("recruiter/jobs/<int:job_id>/applications/",
          views.job_applications_view, name="job_applications"),
-
-    # Recruiter → see one application in detail
     path("recruiter/applications/<int:app_id>/",
          views.job_application_detail_view, name="job_application_detail"),
-
-    # (Optional) Recruiter → quick read-only profile view of a freelancer
     path("recruiter/freelancers/<int:profile_id>/",
          views.recruiter_view_freelancer_profile, name="recruiter_view_freelancer_profile"),
+
+
+    #communication
+    path("recruiter/jobs/<int:job_id>/shortlist/<int:profile_id>/",
+         views.flow_recruiter_shortlist, name="flow_recruiter_shortlist"),
+    path("recruiter/applications/<int:app_id>/interview/",
+         views.flow_recruiter_schedule_interview, name="flow_recruiter_schedule_interview"),
+    path("recruiter/applications/<int:app_id>/outcome/<str:decision>/",
+         views.flow_recruiter_set_outcome, name="flow_recruiter_set_outcome"),  # decision = hire|reject
+
+    # Freelancer
+    path("freelancer/applications/<int:app_id>/respond/<str:decision>/",
+         views.flow_freelancer_respond, name="flow_freelancer_respond"),  # decision = accept|decline
+
+    path("flow/shortlist/<int:app_id>/", views.flow_recruiter_shortlist, name="flow_recruiter_shortlist"),
+    path("flow/schedule/<int:app_id>/", views.flow_recruiter_schedule_interview, name="flow_recruiter_schedule_interview"),
+    path("flow/outcome/<int:app_id>/<str:decision>/", views.flow_recruiter_set_outcome, name="flow_recruiter_set_outcome"),
+
 ]
 
 

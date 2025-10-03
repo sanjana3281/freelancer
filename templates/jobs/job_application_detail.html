@@ -10,13 +10,11 @@
   </div>
 
   <div class="can-wrap can-split" style="gap:16px;">
-    <!-- Left: cover letter & meta -->
     <div class="can-card can-pad-lg">
       <div class="can-muted" style="font-size:12px;margin-bottom:6px;">Cover letter</div>
       <div style="line-height:1.7">{{ app.cover_letter|default:"(no cover letter)"|linebreaks }}</div>
     </div>
 
-    <!-- Right: quick facts & actions -->
     <div class="can-card can-pad-lg" style="display:flex;flex-direction:column;gap:12px;">
       {% if app.resume %}
         <div>

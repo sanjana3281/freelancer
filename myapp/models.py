@@ -2,6 +2,8 @@ from django.db import models
 
 # Create your models here.
 
+from django.utils import timezone
+from datetime import timedelta
 
 class Freelancer(models.Model):
     name = models.CharField(max_length=200)
@@ -164,7 +166,7 @@ class FreelancerProject(models.Model):
     title = models.CharField(max_length=200)
     role_title = models.CharField(max_length=120, blank=True)
     summary = models.TextField(blank=True)
-    tech_stack = models.CharField(max_length=255, blank=True)  # simple comma-separated list
+    tech_stack = models.CharField(max_length=255, blank=True)  
     demo_url = models.URLField(blank=True)
     repo_url = models.URLField(blank=True)
     start_date = models.DateField(null=True, blank=True)
@@ -262,7 +264,7 @@ class Job(models.Model):
 
    
     skills_required = models.ManyToManyField("Skill", through="JobSkill", related_name="jobs")   
-    experience_required = models.CharField(max_length=20, blank=True)  # e.g., "2–5"
+    experience_required = models.CharField(max_length=20, blank=True) 
     education_required = models.CharField(max_length=120, blank=True)
 
 
@@ -291,7 +293,7 @@ class JobSkill(models.Model):
     importance = models.CharField(max_length=12, choices=IMPORTANCE, default="MUST_HAVE")
 
     class Meta:
-        unique_together = ("job", "skill")   # prevent duplicates
+        unique_together = ("job", "skill")  
 
     def __str__(self):
         return f"{self.job.title} - {self.skill.name} ({self.importance})"
@@ -311,7 +313,6 @@ class Application(models.Model):
     cover_letter = models.TextField(blank=True)
     resume = models.FileField(upload_to="applications/resumes/", blank=True, null=True)
 
-    # ← Make these optional so we don't need defaults when adding columns
     portfolio_url = models.URLField(blank=True, null=True)
     expected_salary = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     availability_date = models.DateField(blank=True, null=True)
@@ -323,4 +324,80 @@ class Application(models.Model):
 
     def __str__(self):
         return f"Application: {self.freelancer} → {self.job}"
+
+
+
+
+#comunication
+
+
+
+class ApplicationFlow(models.Model):
+    """
+    Holds the shortlist/interview/hire state for an existing Application.
+    """
+    STAGE = [
+        ("SUBMITTED", "Submitted"),
+        ("SHORTLISTED", "Shortlisted"),
+        ("SHORTLISTED_ACCEPTED", "Shortlisted · Accepted"),
+        ("SHORTLISTED_DECLINED", "Shortlisted · Declined"),
+        ("SHORTLIST_EXPIRED", "Shortlist expired"),
+        ("INTERVIEW", "Interview"),
+        ("HIRED", "Hired"),
+        ("REJECTED", "Rejected"),
+    ]
+
+    application = models.OneToOneField("Application", on_delete=models.CASCADE, related_name="flow")
+    stage = models.CharField(max_length=32, choices=STAGE, default="SUBMITTED")
+
+    # shortlist
+    shortlisted_at = models.DateTimeField(null=True, blank=True)
+    shortlist_expires_at = models.DateTimeField(null=True, blank=True)
+    responded_at = models.DateTimeField(null=True, blank=True)
+
+    # interview
+    interview_at = models.DateTimeField(null=True, blank=True)
+    interview_link = models.CharField(max_length=300, null=True, blank=True)
+    interview_message = models.TextField(null=True, blank=True)
+
+    # outcome
+    outcome_at = models.DateTimeField(null=True, blank=True)
+
+    def shortlist(self, hours=72):
+        now = timezone.now()
+        self.stage = "SHORTLISTED"
+        self.shortlisted_at = now
+        self.shortlist_expires_at = now + timedelta(hours=hours)
+
+    def mark_expired_if_needed(self):
+        if (
+            self.stage == "SHORTLISTED"
+            and self.shortlist_expires_at
+            and timezone.now() > self.shortlist_expires_at
+        ):
+            self.stage = "SHORTLIST_EXPIRED"
+
+    def accepted(self):
+        self.stage = "SHORTLISTED_ACCEPTED"
+        self.responded_at = timezone.now()
+
+    def declined(self):
+        self.stage = "SHORTLISTED_DECLINED"
+        self.responded_at = timezone.now()
+
+    def schedule_interview(self, when, link, msg=""):
+        self.stage = "INTERVIEW"
+        self.interview_at = when
+        self.interview_link = link
+        self.interview_message = msg
+
+    def set_outcome(self, hired: bool):
+        self.stage = "HIRED" if hired else "REJECTED"
+        self.outcome_at = timezone.now()
+
+    def __str__(self):
+        try:
+            return f"Flow({self.application_id}) - {self.get_stage_display()}"
+        except Exception:
+            return f"Flow({self.application_id})"
 
