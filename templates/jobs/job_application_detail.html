@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container container-narrow mt-4">
+
+  <div class="can-title" style="margin-bottom:4px;">
+    Application — {{ app.freelancer.full_name|default:app.freelancer.freelancer.name }}
+  </div>
+  <div class="can-muted" style="margin-bottom:18px;">
+    For: {{ app.job.title }} • {{ app.job.recruiter.recruiter.company_name }}
+  </div>
+
+  <div class="can-wrap can-split" style="gap:16px;">
+    <!-- Left: cover letter & meta -->
+    <div class="can-card can-pad-lg">
+      <div class="can-muted" style="font-size:12px;margin-bottom:6px;">Cover letter</div>
+      <div style="line-height:1.7">{{ app.cover_letter|default:"(no cover letter)"|linebreaks }}</div>
+    </div>
+
+    <!-- Right: quick facts & actions -->
+    <div class="can-card can-pad-lg" style="display:flex;flex-direction:column;gap:12px;">
+      {% if app.resume %}
+        <div>
+          <div class="can-muted" style="font-size:12px;">Resume</div>
+          <a class="can-badge" href="{{ app.resume.url }}" target="_blank" rel="noopener">Download</a>
+        </div>
+      {% endif %}
+
+      {% if app.portfolio_url %}
+        <div>
+          <div class="can-muted" style="font-size:12px;">Portfolio</div>
+          <a class="can-badge" href="{{ app.portfolio_url }}" target="_blank" rel="noopener">{{ app.portfolio_url }}</a>
+        </div>
+      {% endif %}
+
+      {% if app.expected_salary %}
+        <div><span class="can-muted" style="font-size:12px;">Expected salary</span><br>
+          <b>₹{{ app.expected_salary }}</b>
+        </div>
+      {% endif %}
+
+      {% if app.availability_date %}
+        <div><span class="can-muted" style="font-size:12px;">Availability</span><br>
+          <b>{{ app.availability_date }}</b>
+        </div>
+      {% endif %}
+
+      <div style="margin-top:4px;display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="{% url 'recruiter_view_freelancer_profile' app.freelancer.id %}" class="can-btn">View Profile</a>
+        <a href="{% url 'job_applications' app.job.id %}" class="can-btn-outline">Back to Applicants</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

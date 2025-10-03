@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style>
+  .my-jobs-list{
+    display: flex;
+    flex-direction: column;
+    gap: 16px;                 /* space between each job card */
+  }
+  .job-card{
+    background: var(--panel,#0f1a24);
+    border: 1px solid var(--border,rgba(255,255,255,.08));
+    border-radius: 22px;
+    padding: 18px 20px;
+    position: relative;
+  }
+  .job-actions{
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border,rgba(255,255,255,.1));
+  }
+  .pill{
+    position: absolute;
+    right: 16px;
+    top: 16px;
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.08);
+    border: 1px solid var(--border,rgba(255,255,255,.1));
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container container-narrow mt-4">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <h2 class="can-title">My Jobs</h2>
+    <a href="{% url 'job_create' %}" class="can-btn">➕ Create Job</a>
+  </div>
+
+  {% if jobs %}
+    <div class="my-jobs-list">
+      {% for j in jobs %}
+        <article class="job-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-weight:700;font-size:18px;">
+              <a href="{% url 'job_detail' j.id %}" style="text-decoration:none;color:inherit;">
+                {{ j.title }}
+              </a>
+            </div>
+            <span class="pill">{{ j.is_active|yesno:"Active,Closed" }}</span>
+          </div>
+
+          <div class="can-muted" style="font-size:13px;margin-top:4px;">
+            Posted {{ j.posted_at|date:"M d, Y H:i" }}
+          </div>
+
+          <div class="job-actions">
+            <a href="{% url 'job_detail' j.id %}" class="can-btn-outline">👁 View</a>
+            <a href="{% url 'job_edit' j.id %}" class="can-btn-outline">✏ Edit</a>
+            <a href="{% url 'job_toggle_active' j.id %}" class="can-btn-outline">
+              {{ j.is_active|yesno:"🔒 Close,✅ Open" }}
+            </a>
+            <a href="{% url 'job_applications' j.id %}" class="can-btn-outline">📋 Applications</a>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="can-card can-pad">No jobs yet.</div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+

@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block head %}
+  {{ block.super }}
+  <style>
+    /* ====== THEME SAFETY ====== */
+    :root {
+      --bg: #07141b;
+      --panel: #0c1d27;
+      --panel-2: #0e2330;
+      --text: #d9f0ff;
+      --muted: #9cc6dd;
+      --border: rgba(255,255,255,.12);
+      --chip: rgba(210,237,255,.08);
+      --chip-text: #cfe8ff;
+      --btn: #4bd0ff;
+      --accent: #24a9e6;
+      --success: #34d399;
+    }
+
+    /* ====== LAYOUT UTILS ====== */
+    .wrap { max-width: 1024px; margin: 0 auto; }
+    .container-narrow { max-width: 980px; }
+
+    .can-card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; }
+    .can-pad  { padding: 16px; }
+    .can-pad-lg { padding: 24px; }
+    .can-title { font-size: 24px; font-weight: 800; color: var(--text); letter-spacing: .2px; }
+    .can-muted { color: var(--muted); }
+
+    .can-chip { display:inline-flex; align-items:center; gap:6px; padding:.4rem .7rem; border-radius:999px; background:var(--chip); color:var(--chip-text); border:1px solid var(--border); font-size:12px; font-weight:600; }
+    .can-chips { display:flex; gap:8px; flex-wrap:wrap; }
+
+    .can-btn { display:inline-flex; align-items:center; justify-content:center; height:38px; padding:0 14px; border-radius:10px; background:var(--btn); color:#00131f; font-weight:800; text-decoration:none; border:0; box-shadow:0 6px 16px rgba(75,208,255,.25); transition: transform .08s ease; }
+    .can-btn:hover { transform: translateY(-1px); }
+    .can-btn-outline { display:inline-flex; align-items:center; justify-content:center; height:38px; padding:0 14px; border-radius:10px; border:1px solid var(--border); background:transparent; color:var(--text); text-decoration:none; }
+
+    .can-badge { display:inline-flex; align-items:center; gap:8px; padding:.48rem .8rem; border-radius:999px; background:var(--panel-2); color:var(--text); border:1px solid var(--border); text-decoration:none; font-weight:600; }
+    .can-badge:hover { border-color: rgba(255,255,255,.25); }
+
+    /* ====== GRID ====== */
+    .two-col { display:grid; grid-template-columns: minmax(0,2fr) minmax(0,1fr); gap:16px; align-items:start; }
+    .stack { display:flex; flex-direction:column; gap:16px; }
+
+    /* ====== PROJECT TIMELINE ====== */
+    .proj-section .h2 { font-size:20px; font-weight:800; color:var(--text); }
+    .proj-list { display:flex; flex-direction:column; gap:14px; position:relative; }
+    .proj-item { position:relative; padding:14px 14px 14px 18px; background:var(--panel-2); border:1px solid var(--border); border-radius:14px; }
+    .proj-item::before { content:""; position:absolute; left:8px; top:22px; bottom:-16px; width:2px; background:linear-gradient(180deg, rgba(75,208,255,.35), transparent); }
+    .proj-item:last-child::before { display:none; }
+    .dot { position:absolute; left:6px; top:16px; width:8px; height:8px; border-radius:50%; background:var(--btn); box-shadow:0 0 0 3px rgba(75,208,255,.2); }
+
+    .proj-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .proj-title { font-size:16px; font-weight:800; color:var(--text); }
+    .proj-date { font-size:12px; color:var(--muted); white-space:nowrap; }
+    .proj-role { margin-top:6px; font-size:13px; color:var(--muted); }
+    .proj-desc { margin-top:8px; line-height:1.7; color:var(--text); opacity:.95; }
+    .badges { display:flex; gap:8px; margin-top:10px; }
+    .badge { display:inline-flex; align-items:center; padding:.42rem .7rem; border-radius:999px; background:rgba(36,169,230,.12); color:#cfe8ff; border:1px solid rgba(75,208,255,.35); text-decoration:none; font-weight:700; font-size:12px; }
+
+    /* ====== RESPONSIVE ====== */
+    @media (max-width: 900px) {
+      .two-col { grid-template-columns: 1fr; }
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="container container-narrow mt-4 wrap">
+  <!-- ===== Header ===== -->
+  <div class="can-card can-pad" style="display:flex;gap:16px;align-items:center;margin-bottom:16px;">
+    {% if fp.avatar %}
+      <img src="{{ fp.avatar.url }}" alt="" style="width:72px;height:72px;border-radius:16px;object-fit:cover;border:1px solid var(--border);">
+    {% else %}
+      <div style="width:72px;height:72px;border-radius:16px;background:var(--chip);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:28px;">👤</div>
+    {% endif %}
+
+    <div style="flex:1;">
+      <div class="can-title" style="font-size:28px;margin:0;">
+        {{ fp.full_name|default:fp.freelancer.name }}
+      </div>
+      {% if fp.headline %}
+        <div class="can-muted" style="margin-top:2px;">{{ fp.headline }}</div>
+      {% endif %}
+
+      <div class="can-chips" style="margin-top:10px;">
+        {% if fp.years_experience %}<span class="can-chip">🗓 {{ fp.years_experience }} yrs exp</span>{% endif %}
+        {% if fp.availability %}<span class="can-chip">🟢 {{ fp.availability }}</span>{% endif %}
+        {% if fp.city or fp.country %}<span class="can-chip">📍 {{ fp.city }} {{ fp.country }}</span>{% endif %}
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <a class="can-btn" href="mailto:{{ fp.email|default:fp.freelancer.email }}">Email</a>
+      {# <a class="can-btn-outline" href="#" onclick="history.back();return false;">← Back</a> #}
+    </div>
+  </div>
+
+  <!-- ===== 2-Column Layout ===== -->
+  <div class="two-col">
+
+    <!-- ===== LEFT: Core Profile ===== -->
+    <div class="stack">
+
+      <!-- About (rendered once) -->
+      <div class="can-card can-pad">
+        <div class="can-muted" style="font-size:12px;">About</div>
+        <p style="line-height:1.7;margin-top:6px;">{{ fp.bio|default:"(no bio provided)"|linebreaks }}</p>
+      </div>
+
+      <!-- Roles & Skills side-by-side -->
+      <div class="can-card can-pad">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;">
+          <!-- Roles -->
+          <div>
+            <div class="can-muted" style="font-size:12px;">Roles</div>
+            {% with roles=fp.freelancerrole_set.all %}
+              {% if roles|length %}
+                <div class="can-chips" style="margin-top:8px;">
+                  {% for r in roles %}
+                    <span class="can-chip">
+                      {% if r.role and r.role.name %}{{ r.role.name }}{% else %}{{ r.role }}{% endif %}
+                      {% if r.level %} • {{ r.level }}{% endif %}
+                      {% if r.is_current %} • current{% endif %}
+                    </span>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="can-muted" style="margin-top:8px;">(no roles added)</div>
+              {% endif %}
+            {% endwith %}
+          </div>
+
+          <!-- Skills -->
+          <div>
+            <div class="can-muted" style="font-size:12px;">Skills</div>
+            {% with skills=fp.freelancerskill_set.all %}
+              {% if skills|length %}
+                <div class="can-chips" style="margin-top:8px;">
+                  {% for s in skills %}
+                    <span class="can-chip">
+                      {% if s.skill and s.skill.name %}{{ s.skill.name }}{% else %}{{ s.skill }}{% endif %}
+                      {% if s.level %} • {{ s.level }}{% endif %}
+                      {% if s.years %} • {{ s.years }}y{% endif %}
+                    </span>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="can-muted" style="margin-top:8px;">(no skills added)</div>
+              {% endif %}
+            {% endwith %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Languages -->
+      {% with langs=fp.freelancerlanguage_set.all %}
+        {% if langs|length %}
+          <div class="can-card can-pad">
+            <div class="can-muted" style="font-size:12px;">Languages</div>
+            <div class="can-chips" style="margin-top:8px;">
+              {% for l in langs %}
+                <span class="can-chip">
+                  {% if l.language and l.language.name %}{{ l.language.name }}{% else %}{{ l.language }}{% endif %}
+                  {% if l.proficiency %} • {{ l.proficiency }}{% endif %}
+                </span>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <!-- Projects -->
+      <section class="proj-section can-card can-pad">
+        <div class="h2">Projects</div>
+        {% with projects=fp.freelancerproject_set.all %}
+        {% if projects %}
+          <div class="proj-list" style="margin-top:10px;">
+            {% for p in projects %}
+              <article class="proj-item">
+                <span class="dot"></span>
+                <div class="proj-head">
+                  <div class="proj-title">{% firstof p.title "Untitled project" %}</div>
+                  <div class="proj-date">
+                    {% if p.start_date or p.end_date %}
+                      {{ p.start_date|date:"M j, Y" }} — {% if p.end_date %}{{ p.end_date|date:"M j, Y" }}{% else %}Present{% endif %}
+                    {% endif %}
+                  </div>
+                </div>
+                {% if p.role_title or p.role %}
+                  <div class="proj-role">Role: {% firstof p.role_title p.role.name p.role %}</div>
+                {% endif %}
+                {% if p.description %}
+                  <p class="proj-desc">{{ p.description|linebreaksbr }}</p>
+                {% endif %}
+                <div class="badges">
+                  {% if p.demo_url or p.demo or p.live_demo or p.link %}
+                    <a class="badge" href="{% firstof p.demo_url p.demo p.live_demo p.link %}" target="_blank" rel="noopener">Live demo →</a>
+                  {% endif %}
+                  {% if p.github_url or p.repo_url or p.repository or p.repo %}
+                    <a class="badge" href="{% firstof p.github_url p.repo_url p.repository p.repo %}" target="_blank" rel="noopener">Repository →</a>
+                  {% endif %}
+                </div>
+              </article>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="can-muted" style="margin-top:8px;">No projects yet.</div>
+        {% endif %}
+        {% endwith %}
+      </section>
+
+    </div>
+
+    <!-- ===== RIGHT: Quick Facts ===== -->
+    <div class="stack" style="position:sticky;top:16px;">
+      <!-- Contact -->
+      <div class="can-card can-pad">
+        <div class="can-muted" style="font-size:12px;">Contact</div>
+        <div style="margin-top:8px;display:grid;gap:6px;">
+          <div><b>Email:</b> {{ fp.email|default:fp.freelancer.email }}</div>
+          {% if fp.phone %}<div><b>Phone:</b> {{ fp.phone }}</div>{% endif %}
+          {% if fp.city or fp.country %}<div><b>Location:</b> {{ fp.city }} {{ fp.country }}</div>{% endif %}
+        </div>
+      </div>
+
+      <!-- Preferences -->
+      {% if fp.notice_period or fp.contract_preference or fp.expected_salary %}
+        <div class="can-card can-pad">
+          <div class="can-muted" style="font-size:12px;">Preferences</div>
+          <div style="margin-top:8px;display:grid;gap:6px;">
+            {% if fp.notice_period %}<div><b>Notice period:</b> {{ fp.notice_period }}</div>{% endif %}
+            {% if fp.contract_preference %}<div><b>Contract preference:</b> {{ fp.contract_preference }}</div>{% endif %}
+            {% if fp.expected_salary %}<div><b>Expected salary:</b> {{ fp.expected_salary }}</div>{% endif %}
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Links -->
+      {% if fp.website or fp.linkedin_url or fp.github_url or fp.portfolio_url %}
+        <div class="can-card can-pad">
+          <div class="can-muted" style="font-size:12px;">Links</div>
+          <div class="can-chips" style="margin-top:8px;">
+            {% if fp.website %}<a class="can-badge" href="{{ fp.website }}" target="_blank" rel="noopener">Website</a>{% endif %}
+            {% if fp.linkedin_url %}<a class="can-badge" href="{{ fp.linkedin_url }}" target="_blank" rel="noopener">LinkedIn</a>{% endif %}
+            {% if fp.github_url %}<a class="can-badge" href="{{ fp.github_url }}" target="_blank" rel="noopener">GitHub</a>{% endif %}
+            {% if fp.portfolio_url %}<a class="can-badge" href="{{ fp.portfolio_url }}" target="_blank" rel="noopener">Portfolio</a>{% endif %}
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Resume -->
+      {% if fp.resume_file or fp.resume %}
+        <div class="can-card can-pad">
+          <div class="can-muted" style="font-size:12px;">Resume</div>
+          <div style="margin-top:8px;">
+            {% if fp.resume_file %}
+              <a class="can-badge" href="{{ fp.resume_file.url }}" target="_blank" rel="noopener">Download</a>
+            {% elif fp.resume %}
+              <a class="can-badge" href="{{ fp.resume }}" target="_blank" rel="noopener">Open</a>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+

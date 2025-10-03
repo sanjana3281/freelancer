@@ -1,0 +1,430 @@
+{% if form.errors or role_fs.errors or skill_fs.errors or lang_fs.errors or proj_fs.errors or ach_fs.errors or pub_fs.errors or role_fs.non_form_errors or skill_fs.non_form_errors or lang_fs.non_form_errors or proj_fs.non_form_errors or ach_fs.non_form_errors or pub_fs.non_form_errors %}
+  <div class="card" style="border-color:#7f1d1d;background:#2a0f14;color:#fecaca">
+    <strong>Fix the errors below:</strong>
+    <ul style="margin:8px 0 0 16px">
+      {% for k,v in form.errors.items %}<li>Profile — {{ k }}: {{ v|join:", " }}</li>{% endfor %}
+      {% for e in role_fs.non_form_errors %}<li>Roles — {{ e }}</li>{% endfor %}
+      {% for e in skill_fs.non_form_errors %}<li>Skills — {{ e }}</li>{% endfor %}
+      {% for e in lang_fs.non_form_errors %}<li>Languages — {{ e }}</li>{% endfor %}
+      {% for e in proj_fs.non_form_errors %}<li>Projects — {{ e }}</li>{% endfor %}
+      {% for e in ach_fs.non_form_errors %}<li>Achievements — {{ e }}</li>{% endfor %}
+      {% for e in pub_fs.non_form_errors %}<li>Publications — {{ e }}</li>{% endfor %}
+    </ul>
+  </div>
+{% endif %}
+{% load static %}
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Edit Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+:root{--bg:#0b1220;--panel:#111827;--panel2:#0f172a;--stroke:#1f2a44;--text:#e9eef9;--muted:#a6b2c9;--blue1:#38bdf8;--blue2:#2563eb;--r:16px}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:500 16px/1.6 'Poppins',system-ui}
+.wrap{max-width:1100px;margin:0 auto;padding:28px 20px}
+.h1{font-size:34px;font-weight:800;margin:0 0 10px}
+.card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--stroke);border-radius:var(--r);padding:22px;margin:16px 0}
+.section-title{margin:0 0 12px;font-size:18px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px} .grid-1{display:grid;grid-template-columns:1fr;gap:14px}
+.field{display:flex;flex-direction:column;gap:6px}
+.label{font-size:13px;color:var(--muted)}
+input[type=text],input[type=url],input[type=email],input[type=number],input[type=file],select,textarea{width:100%;padding:11px 12px;border-radius:12px;background:#0f1a2f;border:1px solid #213053;color:var(--text)}
+textarea{min-height:120px}
+table{width:100%;border-collapse:separate;border-spacing:0 8px} th{color:#9fb0cc;text-align:left;font-size:13px;padding:6px 8px}
+td{background:#0f1a2f;border:1px solid #213053;padding:6px 8px} tr td:first-child{border-radius:12px 0 0 12px} tr td:last-child{border-radius:0 12px 12px 0}
+.err{color:#f87171;font-size:13px}
+.actions{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;border:1px solid transparent;font-weight:800;cursor:pointer}
+.btn-primary{background:linear-gradient(90deg,var(--blue1),var(--blue2));color:#06223a}
+.btn-ghost{background:#0f1a2f;border:1px solid #213053;color:#cbd5e1}
+.toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.small{font-size:13px;color:var(--muted)}
+.add{font-weight:800;color:#7aa9ff;cursor:pointer}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1 class="h1">Edit Profile</h1>
+  {% if messages %}{% for m in messages %}<div class="small">{{ m }}</div>{% endfor %}{% endif %}
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <!-- BASICS -->
+    <section class="card">
+      <div class="section-title">Basics</div>
+      <div class="grid">
+        <div class="field"><label class="label">Headline</label>{{ form.headline }}{% for e in form.headline.errors %}<div class="err">{{ e }}</div>{% endfor %}</div>
+        <div class="field"><label class="label">Bio</label>{{ form.bio }}{% for e in form.bio.errors %}<div class="err">{{ e }}</div>{% endfor %}</div>
+        <div class="field"><label class="label">Profile photo</label>{{ form.profile_photo }}</div>
+        <div class="field"><label class="label">Country</label>{{ form.location_country }}</div>
+        <div class="field"><label class="label">City</label>{{ form.location_city }}</div>
+        <div class="field"><label class="label">Timezone</label>{{ form.timezone }}</div>
+        <div class="field"><label class="label">Experience</label>{{ form.years_experience }}</div>
+        <div class="field"><label class="label">Hourly rate</label>{{ form.hourly_rate }}</div>
+        <div class="field"><label class="label">Work mode</label>{{ form.work_modes }}</div>
+        <div class="field"><label class="label">Work authorization</label>{{ form.work_authorization }}</div>
+        <div class="field"><label class="label">Travel ready</label>{{ form.travel_ready }}</div>
+      </div>
+    </section>
+
+    <!-- ROLES -->
+    <section class="card" id="roles">
+    <div class="toolbar">
+        <div class="section-title">Roles</div>
+        <a class="add" data-add-row data-prefix="roles">+ Add role</a>
+    </div>
+
+    {{ role_fs.management_form }}
+    {% if role_fs.non_form_errors %}<div class="err">{{ role_fs.non_form_errors }}</div>{% endif %}
+    <table>
+        <thead><tr><th>Role</th><th>Delete</th></tr></thead>
+        <tbody data-formset-list="roles">
+        {% for f in role_fs %}
+        <tr>
+            {% for h in f.hidden_fields %}{{ h }}{% endfor %}
+            <td>
+            {{ f.role }}
+            {% for e in f.role.errors %}<div class="err">{{ e }}</div>{% endfor %}
+            {% if f.non_field_errors %}<div class="err">{{ f.non_field_errors }}</div>{% endif %}
+            </td>
+            <td>{{ f.DELETE }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    {# Hidden empty row using the real Django widgets #}
+    <template id="roles-empty-row">
+        <tr>
+        {% for h in role_fs.empty_form.hidden_fields %}{{ h.as_widget|safe }}{% endfor %}
+        <td>{{ role_fs.empty_form.role.as_widget|safe }}</td>
+        <td>{{ role_fs.empty_form.DELETE.as_widget|safe }}</td>
+        </tr>
+    </template>
+    </section>
+
+
+    <!-- SKILLS -->
+    <section class="card" id="skills">
+    <div class="toolbar">
+        <div class="section-title">Skills</div>
+        <a class="add" data-add-row data-prefix="skills">+ Add skill</a>
+    </div>
+
+    {{ skill_fs.management_form }}
+    {% if skill_fs.non_form_errors %}<div class="err">{{ skill_fs.non_form_errors }}</div>{% endif %}
+    <table>
+        <thead><tr><th>Skill</th><th>Level</th><th>Years</th><th>Delete</th></tr></thead>
+        <tbody data-formset-list="skills">
+        {% for f in skill_fs %}
+        <tr>
+            {% for h in f.hidden_fields %}{{ h }}{% endfor %}
+            <td>{{ f.skill }}{% for e in f.skill.errors %}<div class="err">{{ e }}</div>{% endfor %}</td>
+            <td>{{ f.level }}{% for e in f.level.errors %}<div class="err">{{ e }}</div>{% endfor %}</td>
+            <td>{{ f.years }}{% for e in f.years.errors %}<div class="err">{{ e }}</div>{% endfor %}</td>
+            <td>{{ f.DELETE }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <template id="skills-empty-row">
+        <tr>
+        {% for h in skill_fs.empty_form.hidden_fields %}{{ h.as_widget|safe }}{% endfor %}
+        <td>{{ skill_fs.empty_form.skill.as_widget|safe }}</td>
+        <td>{{ skill_fs.empty_form.level.as_widget|safe }}</td>
+        <td>{{ skill_fs.empty_form.years.as_widget|safe }}</td>
+        <td>{{ skill_fs.empty_form.DELETE.as_widget|safe }}</td>
+        </tr>
+    </template>
+    </section>
+
+
+    <section class="card" id="langs">
+  <div class="toolbar">
+    <div class="section-title">Languages</div>
+    <a class="add" data-add-row data-prefix="langs">+ Add language</a>
+  </div>
+
+  {{ lang_fs.management_form }}
+  <table>
+    <thead><tr><th>Language</th><th>Proficiency</th><th>Delete</th></tr></thead>
+    <tbody data-formset-list="langs">
+      {% for f in lang_fs %}
+      <tr>
+        {% for h in f.hidden_fields %}{{ h }}{% endfor %}
+        <td>{{ f.language }}</td>
+        <td>{{ f.proficiency }}</td>
+        <td>{{ f.DELETE }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <template id="langs-empty-row">
+    <tr>
+      {% for h in lang_fs.empty_form.hidden_fields %}{{ h.as_widget|safe }}{% endfor %}
+      <td>{{ lang_fs.empty_form.language.as_widget|safe }}</td>
+      <td>{{ lang_fs.empty_form.proficiency.as_widget|safe }}</td>
+      <td>{{ lang_fs.empty_form.DELETE.as_widget|safe }}</td>
+    </tr>
+  </template>
+</section>
+
+
+    <!-- PROJECTS -->
+    <section class="card" id="projects">
+  <div class="toolbar">
+    <div class="section-title">Projects</div>
+    <a class="add" data-add-row data-prefix="projects">+ Add project</a>
+  </div>
+
+  {{ proj_fs.management_form }}
+  {% if proj_fs.non_form_errors %}<div class="err">{{ proj_fs.non_form_errors }}</div>{% endif %}
+
+  <table>
+    <thead>
+      <tr><th>Title</th><th>Role</th><th>Tech</th><th>Demo</th><th>Repo</th><th>Start</th><th>End</th><th>Delete</th></tr>
+    </thead>
+    <tbody data-formset-list="projects">
+      {% for f in proj_fs %}
+      <tr>
+        {% for h in f.hidden_fields %}{{ h }}{% endfor %}
+        <td>{{ f.title }}{% for e in f.title.errors %}<div class="err">{{ e }}</div>{% endfor %}</td>
+        <td>{{ f.role_title }}</td>
+        <td>{{ f.tech_stack }}</td>
+        <td>{{ f.demo_url }}</td>
+        <td>{{ f.repo_url }}</td>
+        <td>{{ f.start_date }}</td>
+        <td>{{ f.end_date }}</td>
+        <td>{{ f.DELETE }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {# correct empty row using Django widgets with __prefix__ #}
+  <template id="projects-empty-row">
+    <tr>
+      {% for h in proj_fs.empty_form.hidden_fields %}{{ h.as_widget|safe }}{% endfor %}
+      <td>{{ proj_fs.empty_form.title.as_widget|safe }}</td>
+      <td>{{ proj_fs.empty_form.role_title.as_widget|safe }}</td>
+      <td>{{ proj_fs.empty_form.tech_stack.as_widget|safe }}</td>
+      <td>{{ proj_fs.empty_form.demo_url.as_widget|safe }}</td>
+      <td>{{ proj_fs.empty_form.repo_url.as_widget|safe }}</td>
+      <td>{{ proj_fs.empty_form.start_date.as_widget|safe }}</td>
+      <td>{{ proj_fs.empty_form.end_date.as_widget|safe }}</td>
+      <td>{{ proj_fs.empty_form.DELETE.as_widget|safe }}</td>
+    </tr>
+  </template>
+</section>
+
+
+   <!-- ========== Achievements ========== -->
+<section class="card" id="achs">
+  <div class="toolbar">
+    <div class="section-title">Achievements</div>
+    <a class="add" data-add-row data-prefix="achs">+ Add achievement</a>
+  </div>
+
+  {{ ach_fs.management_form }}
+  {% if ach_fs.non_form_errors %}<div class="err">{{ ach_fs.non_form_errors }}</div>{% endif %}
+
+  <table>
+    <thead><tr><th>Title *</th><th>Description</th><th>Date</th><th>Delete</th></tr></thead>
+    <tbody data-formset-list="achs">
+      {% for f in ach_fs %}
+      <tr>
+        {% for h in f.hidden_fields %}{{ h }}{% endfor %}
+        <td>
+          {{ f.title }}
+          {% for e in f.title.errors %}<div class="err">{{ e }}</div>{% endfor %}
+        </td>
+        <td>{{ f.description }}</td>
+        <td>{{ f.date }}</td>
+        <td>{{ f.DELETE }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {# template for a brand-new row using the real empty_form widgets #}
+  <template id="achs-empty-row">
+    <tr>
+      {% for h in ach_fs.empty_form.hidden_fields %}{{ h.as_widget|safe }}{% endfor %}
+      <td>{{ ach_fs.empty_form.title.as_widget|safe }}</td>
+      <td>{{ ach_fs.empty_form.description.as_widget|safe }}</td>
+      <td>{{ ach_fs.empty_form.date.as_widget|safe }}</td>
+      <td>{{ ach_fs.empty_form.DELETE.as_widget|safe }}</td>
+    </tr>
+  </template>
+</section>
+
+
+
+<section class="card" id="pubs">
+  <div class="toolbar">
+    <div class="section-title">Publications</div>
+    <a class="add" data-add-row data-prefix="pubs">+ Add publication</a>
+  </div>
+
+  {{ pub_fs.management_form }}
+  {% if pub_fs.non_form_errors %}<div class="err">{{ pub_fs.non_form_errors }}</div>{% endif %}
+
+  <table>
+    <thead><tr><th>Title *</th><th>Link</th><th>Description</th><th>Date</th><th>Delete</th></tr></thead>
+    <tbody data-formset-list="pubs">
+      {% for f in pub_fs %}
+      <tr>
+        {% for h in f.hidden_fields %}{{ h }}{% endfor %}
+        <td>
+          {{ f.title }}
+          {% for e in f.title.errors %}<div class="err">{{ e }}</div>{% endfor %}
+        </td>
+        <td>
+          {{ f.link }}
+          {% for e in f.link.errors %}<div class="err">{{ e }}</div>{% endfor %}
+        </td>
+        <td>{{ f.description }}</td>
+        <td>{{ f.date }}</td>
+        <td>{{ f.DELETE }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <template id="pubs-empty-row">
+    <tr>
+      {% for h in pub_fs.empty_form.hidden_fields %}{{ h.as_widget|safe }}{% endfor %}
+      <td>{{ pub_fs.empty_form.title.as_widget|safe }}</td>
+      <td>{{ pub_fs.empty_form.link.as_widget|safe }}</td>
+      <td>{{ pub_fs.empty_form.description.as_widget|safe }}</td>
+      <td>{{ pub_fs.empty_form.date.as_widget|safe }}</td>
+      <td>{{ pub_fs.empty_form.DELETE.as_widget|safe }}</td>
+    </tr>
+  </template>
+</section>
+<section class="card can-pad-lg">
+  <div class="toolbar" style="display:flex; justify-content:space-between; align-items:center">
+    <h3 class="section-title" style="margin:0">Contact & Links</h3>
+    {% if form.resume_file.value %}
+      <a class="can-btn can-btn-2" href="{{ form.instance.resume_file.url }}" target="_blank">View Résumé</a>
+    {% endif %}
+  </div>
+
+  <div class="grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+    <div>
+      <label class="lbl">Email</label>
+      {{ form.contact_email }}
+      {% for e in form.contact_email.errors %}<div class="err">{{ e }}</div>{% endfor %}
+    </div>
+    <div>
+      <label class="lbl">Phone</label>
+      {{ form.contact_phone }}
+      {% for e in form.contact_phone.errors %}<div class="err">{{ e }}</div>{% endfor %}
+    </div>
+    <div>
+      <label class="lbl">WhatsApp</label>
+      {{ form.contact_whatsapp }}
+      {% for e in form.contact_whatsapp.errors %}<div class="err">{{ e }}</div>{% endfor %}
+    </div>
+    <div>
+      <label class="lbl">Résumé (PDF)</label>
+      {{ form.resume_file }}
+      {% for e in form.resume_file.errors %}<div class="err">{{ e }}</div>{% endfor %}
+      {% if form.instance.resume_file %}
+        <div class="muted small" style="margin-top:6px">
+          Current: <a href="{{ form.instance.resume_file.url }}" target="_blank">Open →</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <hr style="border-color:#2a3340;margin:18px 0"/>
+
+  <div class="grid" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
+    <div>
+      <label class="lbl">GitHub</label>
+      {{ form.github_url }}
+      {% for e in form.github_url.errors %}<div class="err">{{ e }}</div>{% endfor %}
+    </div>
+    <div>
+      <label class="lbl">Portfolio</label>
+      {{ form.portfolio_link }}
+      {% for e in form.portfolio_link.errors %}<div class="err">{{ e }}</div>{% endfor %}
+    </div>
+    <div>
+      <label class="lbl">Publications</label>
+      {{ form.publications_link }}
+      {% for e in form.publications_link.errors %}<div class="err">{{ e }}</div>{% endfor %}
+    </div>
+  </div>
+
+ 
+  <div class="kv" style="margin-top:12px">
+    {% if form.instance.github_url %}
+      <div><span>GitHub</span><a href="{{ form.instance.github_url }}" target="_blank">Open →</a></div>
+    {% endif %}
+    {% if form.instance.portfolio_link %}
+      <div><span>Portfolio</span><a href="{{ form.instance.portfolio_link }}" target="_blank">Open →</a></div>
+    {% endif %}
+    {% if form.instance.publications_link %}
+      <div><span>Publications</span><a href="{{ form.instance.publications_link }}" target="_blank">Open →</a></div>
+    {% endif %}
+  </div>
+</section>
+
+
+
+
+
+    <div class="actions">
+      <a class="btn btn-ghost" href="{% url 'freelancer_dashboard' %}">Cancel</a>
+      <button class="btn btn-primary" type="submit">Save all changes</button>
+    </div>
+  </form>
+</div>
+
+<script>
+(function(){
+  function addRow(prefix){
+    const total = document.querySelector(`input[name="${prefix}-TOTAL_FORMS"]`);
+    const tbody = document.querySelector(`[data-formset-list="${prefix}"]`);
+    const tpl   = document.getElementById(`${prefix}-empty-row`);
+    if (!total || !tbody || !tpl) return;
+
+    const index = parseInt(total.value || "0", 10);
+    const html  = tpl.innerHTML.replace(/__prefix__/g, index);
+    const wrap  = document.createElement("tbody");
+    wrap.innerHTML = html.trim();
+    const row = wrap.firstElementChild;
+
+    // Ensure every element’s name/id uses the new index
+    row.querySelectorAll("[name]").forEach(el => {
+      el.name = el.name.replace(/__prefix__/g, index);
+      if (el.id) el.id = el.id.replace(/__prefix__/g, index);
+    });
+
+    tbody.appendChild(row);
+    total.value = index + 1;
+  }
+
+  document.querySelectorAll("[data-add-row]").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.preventDefault();
+      addRow(btn.getAttribute("data-prefix"));
+    });
+  });
+})();
+</script>
+
+
+</body>
+</html>

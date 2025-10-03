@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Profile — Freelancer Portal{% endblock %}
+
+{% block content %}
+<!-- <div class="can-hero"> -->
+<div class="can-hero fullbleed">
+  <div class="can-wrap">
+    <div class="hero-inner">
+      <div>
+        <div class="hero-eyebrow">Welcome back</div>
+        <h1 class="hero-title">{{ freelancer.name|default:"Freelancer" }}</h1>
+        <div class="hero-sub">{{ profile.headline|default:"Add a short headline to stand out." }}</div>
+      </div>
+      <div class="hero-actions">
+        <a class="pill-btn pill-teal can-btn" href="{% url 'jobs_list' %}" style=" background:linear-gradient(135deg,#34d399,#22d3ee); color:#001016;">Browse Jobs</a>
+        <a class="can-btn" href="{% url 'freelancer_profile_edit' %}">Edit Profile</a>
+        {% if profile.resume_file %}
+          <a class="can-btn can-btn-2" href="{{ profile.resume_file.url }}" target="_blank">View Resume</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="can-wrap can-grid">
+  <!-- Sidebar -->
+  <aside class="can-card can-pad-lg sidebar">
+    <div class="pfp">
+      {% if profile.profile_photo %}
+        <img src="{{ profile.profile_photo.url }}" alt="Profile photo">
+      {% else %}
+        <div class="pfp-fallback">👩‍💻</div>
+      {% endif %}
+    </div>
+
+    <div class="name">{{ freelancer.name }}</div>
+    <div class="muted">{{ profile.headline }}</div>
+
+    <div class="chips">
+      {% if profile.work_modes %}<span class="can-chip">{{ profile.get_work_modes_display }}</span>{% endif %}
+      {% if profile.location_city or profile.location_country %}
+        <span class="can-chip">📍 {{ profile.location_city }} {{ profile.location_country }}</span>
+      {% endif %}
+      {% if profile.years_experience is not None %}
+        <span class="can-chip">🎯 {{ profile.years_experience }} yrs</span>
+      {% endif %}
+    </div>
+
+    <div class="kv">
+      {% if profile.timezone %}<div><span>Timezone</span><b>{{ profile.timezone }}</b></div>{% endif %}
+      {% if profile.hourly_rate %}<div><span>Hourly</span><b>{{ profile.hourly_rate }}</b></div>{% endif %}
+      {% if profile.github_url %}<div><span>GitHub</span><a href="{{ profile.github_url }}" target="_blank">Open →</a></div>{% endif %}
+      {% if profile.portfolio_link %}<div><span>Portfolio</span><a href="{{ profile.portfolio_link }}" target="_blank">Open →</a></div>{% endif %}
+      {% if profile.publications_link %}<div><span>Publications</span><a href="{{ profile.publications_link }}" target="_blank">Open →</a></div>{% endif %}
+    </div>
+
+    <div class="contact">
+      <div class="muted small">Contact</div>
+      <div class="kv">
+        {% if profile.contact_email %}<div><span>Email</span><b>{{ profile.contact_email }}</b></div>{% endif %}
+        {% if profile.contact_phone %}<div><span>Phone</span><b>{{ profile.contact_phone }}</b></div>{% endif %}
+        {% if profile.contact_whatsapp %}<div><span>WhatsApp</span><b>{{ profile.contact_whatsapp }}</b></div>{% endif %}
+      </div>
+    </div>
+    
+</section>
+
+
+  </aside>
+
+
+  <!-- Main -->
+  <main class="main">
+    <!-- About -->
+    <section class="can-card can-pad-lg">
+      <h3 class="section-title">About</h3>
+      <p class="muted" style="line-height:1.8">
+        {{ profile.bio|default:"Tell clients what you do, what you’ve shipped, and what problems you love solving." }}
+      </p>
+      <div class="about-grid">
+        <div>
+          <div class="muted small">Location</div>
+          <div class="strong">{{ profile.location_city }} {{ profile.location_country }}</div>
+        </div>
+        <div>
+          <div class="muted small">Timezone</div>
+          <div class="strong">{{ profile.timezone }}</div>
+        </div>
+        <div>
+          <div class="muted small">Experience</div>
+          <div class="strong">{{ profile.years_experience }} years</div>
+        </div>
+        <div>
+          <div class="muted small">Work Mode</div>
+          <div class="strong">{{ profile.get_work_modes_display }}</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Roles & Skills -->
+    <section class="can-card can-pad-lg">
+      <h3 class="section-title">Roles & Skills</h3>
+      {% if roles %}
+        <div class="muted small">Primary Roles</div>
+        <div class="chips" style="margin-top:8px;">
+          {% for r in roles %}
+            <span class="can-chip">{{ r.role.name }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% if skills %}
+        <div class="muted small" style="margin-top:16px;">Top Skills</div>
+        <div class="skills-grid">
+          {% for s in skills %}
+            <div class="skill-pill">
+              <span>{{ s.skill.name }}</span>
+              <em>{{ s.get_level_display }}</em>
+              {% if s.years %}<b>{{ s.years }}y</b>{% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="muted">Add your skills to get better matches.</div>
+      {% endif %}
+
+      {% if langs %}
+        <div class="muted small" style="margin-top:16px;">Languages</div>
+        <div class="chips" style="margin-top:8px;">
+          {% for l in langs %}
+            <span class="can-chip">{{ l.language.name }} • {{ l.get_proficiency_display }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </section>
+
+
+<!-- Browse Jobs — CTA between sections -->
+<section class="cta-card jobs-cta between-sections">
+  <div class="cta-body">
+    <div class="cta-icon" aria-hidden="true">
+      <!-- briefcase icon -->
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor">
+        <path d="M10 4h4a2 2 0 0 1 2 2v1h3a2 2 0 0 1 2 2v4.5a4.5 4.5 0 0 1-4.5 4.5H7.5A4.5 4.5 0 0 1 3 13.5V9a2 2 0 0 1 2-2h3V6a2 2 0 0 1 2-2Zm4 2h-4v1h4V6ZM5 11h14v1.5a2.5 2.5 0 0 1-2.5 2.5H7.5A2.5 2.5 0 0 1 5 12.5V11Z"/>
+      </svg>
+    </div>
+
+    <div class="cta-copy">
+      <h3>Browse Jobs</h3>
+      <p>See all active roles from verified recruiters and apply in one click.</p>
+    </div>
+  </div>
+
+  <a class="cta-btn" href="{% url 'jobs_list' %}">View Jobs →</a>
+</section>
+
+
+    <!-- Projects timeline -->
+    <section class="can-card can-pad-lg">
+      <h3 class="section-title">Projects</h3>
+      {% if projects %}
+        <div class="timeline">
+          {% for p in projects %}
+            <div class="tl-item">
+              <div class="tl-dot"></div>
+              <div class="tl-card">
+                <div class="tl-head">
+                  <div class="tl-title">{{ p.title }}</div>
+                  <div class="muted small">{{ p.start_date }}{% if p.end_date %} — {{ p.end_date }}{% endif %}</div>
+                </div>
+                {% if p.role_title %}<div class="muted">Role: {{ p.role_title }}</div>{% endif %}
+                {% if p.summary %}<p class="muted" style="margin-top:6px">{{ p.summary }}</p>{% endif %}
+                {% if p.tech_list %}
+                  <div class="chips" style="margin-top:8px;">
+                    {% for t in p.tech_list %}
+                      <span class="can-chip">{{ t }}</span>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+                <div class="links">
+                  {% if p.demo_url %}<a href="{{ p.demo_url }}" target="_blank" class="link">Live demo →</a>{% endif %}
+                  {% if p.repo_url %}<a href="{{ p.repo_url }}" target="_blank" class="link">Repository →</a>{% endif %}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="muted">Showcase 2–3 projects you’re proud of.</div>
+      {% endif %}
+    </section>
+
+    <!-- Achievements & Publications -->
+    <section class="can-card can-pad-lg">
+      <div class="two-col">
+        <div>
+          <h3 class="section-title">Achievements</h3>
+          {% if achievements %}
+            <ul class="flat-list">
+              {% for a in achievements %}
+                <li>
+                  <span class="dot">🏆</span>
+                  <div>
+                    <b>{{ a.title }}</b>
+                    {% if a.date %}<span class="muted small"> — {{ a.date }}</span>{% endif %}
+                    {% if a.description %}<div class="muted">{{ a.description }}</div>{% endif %}
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="muted">Add notable wins—awards, certifications, milestones.</div>
+          {% endif %}
+        </div>
+
+        <div>
+          <h3 class="section-title">Publications</h3>
+          {% if publications %}
+            <ul class="flat-list">
+              {% for p in publications %}
+                <li>
+                  <span class="dot">📝</span>
+                  <div>
+                    <b>{{ p.title }}</b>
+                    {% if p.date %}<span class="muted small"> — {{ p.date }}</span>{% endif %}
+                    {% if p.link %}<div><a href="{{ p.link }}" class="link" target="_blank">Read →</a></div>{% endif %}
+                    {% if p.description %}<div class="muted">{{ p.description }}</div>{% endif %}
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="muted">Publish posts or talks? List them here.</div>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+{% endblock %}
+

@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head %}
+<style>
+  /* ===== Apply page — local styles (dark, matches your forms) ===== */
+  .apply-hero{
+    background:
+      radial-gradient(1200px 400px at 20% -10%, rgba(67,127,255,.25), transparent),
+      radial-gradient(800px 400px at 120% -20%, rgba(199,125,255,.25), transparent),
+      var(--panel, #0f172a);
+    border: 1px solid var(--border, #243044);
+    border-radius: 16px;
+  }
+  .apply-hero__top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .apply-hero__title{margin:0;line-height:1.1;font-size:28px;font-weight:800}
+  .apply-hero__meta{margin-top:8px}
+  .apply-hero__company{color:var(--muted, #94a3b8)}
+  .apply-hero__chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+
+  /* Form shell to scope styles */
+  .can-form .field{margin-bottom:16px}
+  .can-form .field__label{display:block;font-weight:600;margin-bottom:6px;font-size:14px;color:var(--muted, #94a3b8)}
+  .can-form .hint{color:var(--muted, #94a3b8);font-size:12px;margin-top:6px}
+  .can-form .err{color:#ff6b6b;font-size:12px;margin-top:6px}
+
+  /* Inputs — dark look everywhere without add_class */
+  .can-form input,
+  .can-form textarea,
+  .can-form select{
+    width:100%;
+    background:var(--panel, #0f172a) !important;
+    color:var(--fg, #e5e7eb) !important;
+    border:1px solid var(--border, #243044);
+    border-radius:12px;
+    padding:12px 14px;
+    outline:none;
+  }
+  .can-form ::placeholder{color:rgba(255,255,255,.55)}
+  .can-form textarea{min-height:170px; resize:vertical}
+
+  .can-form input:focus,
+  .can-form textarea:focus,
+  .can-form select:focus{
+    border-color:rgba(90,142,255,.6);
+    box-shadow:0 0 0 3px rgba(90,142,255,.15);
+  }
+
+  /* Date input — make the popup dark + icon visible */
+  .can-form input[type="date"]{
+    color-scheme: dark;
+  }
+  .can-form input[type="date"]::-webkit-calendar-picker-indicator{
+    filter: invert(1) opacity(.85);
+  }
+
+  /* Native file input can still show white; provide a custom picker */
+  .filepicker{position:relative;display:flex;align-items:center;gap:12px}
+  .filepicker input[type="file"]{
+    position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;
+  }
+  .filepicker__name{color:var(--muted, #94a3b8)}
+  .btn-ghost{
+    border:1px solid var(--border, #243044);
+    background:transparent;
+    color:var(--fg, #e5e7eb);
+    padding:8px 12px;border-radius:10px;
+  }
+  .btn-ghost:hover{background:rgba(255,255,255,.06)}
+
+  /* Grid rows like your edit forms */
+  .row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:720px){ .row-2{grid-template-columns:1fr} }
+
+  /* Action buttons */
+  .actions{display:flex;gap:12px;margin-top:8px}
+  .can-btn{padding:.8rem 1.2rem;border-radius:12px}
+  .can-btn-outline{padding:.8rem 1.2rem;border-radius:12px}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container container-narrow">
+
+  <!-- Header / hero -->
+  <div class="can-card can-pad-lg apply-hero" style="margin-top:10px; margin-bottom:14px;">
+    <div class="apply-hero__top">
+      <h1 class="apply-hero__title">Apply to {{ job.title }}</h1>
+      <a class="can-btn-outline" href="{% url 'job_detail' job.id %}">← Back</a>
+    </div>
+
+    <div class="apply-hero__meta">
+      <div class="apply-hero__company">
+        {{ job.recruiter.recruiter.company_name }} • {{ job.location_city }} {{ job.location_country }}
+      </div>
+      <div class="apply-hero__chips">
+        <span class="can-chip">{{ job.get_job_type_display }}</span>
+        <span class="can-chip">{{ job.get_work_mode_display }}</span>
+        {% if job.experience_required %}<span class="can-chip">{{ job.experience_required }} yrs</span>{% endif %}
+        {% if job.application_deadline %}<span class="can-chip">Apply by {{ job.application_deadline }}</span>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }} mb-2">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" class="can-form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <!-- BASICS -->
+    <div class="can-card can-pad-lg" style="margin-bottom:14px;">
+      <div class="can-title" style="font-size:18px;margin-bottom:12px;">Basics</div>
+
+      <div class="field">
+        <label class="field__label">{{ form.cover_letter.label }}</label>
+        {{ form.cover_letter }}
+        {% for e in form.cover_letter.errors %}<div class="err">{{ e }}</div>{% endfor %}
+        <div class="hint">A few sentences about why you’re a great fit.</div>
+      </div>
+
+      <div class="row-2">
+        <div class="field">
+          <label class="field__label">{{ form.portfolio_url.label }}</label>
+          {{ form.portfolio_url }}
+          {% for e in form.portfolio_url.errors %}<div class="err">{{ e }}</div>{% endfor %}
+        </div>
+
+        <div class="field">
+          <label class="field__label">{{ form.resume.label }}</label>
+
+          <!-- Custom dark file picker (keeps native input for the form) -->
+          <div class="filepicker">
+            {{ form.resume }}
+            <button type="button" class="btn-ghost" id="pick-file-btn">Choose File</button>
+            <span class="filepicker__name">No file chosen</span>
+          </div>
+
+          {% for e in form.resume.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          <div class="hint">PDF/DOC up to ~5MB</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGISTICS -->
+    <div class="can-card can-pad-lg" style="margin-bottom:14px;">
+      <div class="can-title" style="font-size:18px;margin-bottom:12px;">Logistics</div>
+
+      <div class="row-2">
+        <div class="field">
+          <label class="field__label">
+            {{ form.expected_salary.label }} ({{ job.currency }})
+          </label>
+          {{ form.expected_salary }}
+          {% for e in form.expected_salary.errors %}<div class="err">{{ e }}</div>{% endfor %}
+        </div>
+
+        <div class="field">
+          <label class="field__label">{{ form.availability_date.label }}</label>
+          {{ form.availability_date }}
+          {% for e in form.availability_date.errors %}<div class="err">{{ e }}</div>{% endfor %}
+        </div>
+      </div>
+
+      <div class="hint" style="margin-top:10px;">
+        Pro tip: a short tailored cover letter and a recent resume improves your response rate.
+      </div>
+    </div>
+
+    <div class="actions" style="margin-bottom:18px;">
+      <button type="submit" class="can-btn">Submit application</button>
+      <a href="{% url 'job_detail' job.id %}" class="can-btn-outline">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<!-- tiny helper to drive the custom file button -->
+<script>
+  (function () {
+    const picker = document.querySelector('.filepicker');
+    if (!picker) return;
+    const input = picker.querySelector('input[type=file]');
+    const btn   = document.getElementById('pick-file-btn');
+    const name  = picker.querySelector('.filepicker__name');
+    if (!input || !btn || !name) return;
+    btn.addEventListener('click', () => input.click());
+    input.addEventListener('change', () => {
+      name.textContent = (input.files && input.files[0]) ? input.files[0].name : 'No file chosen';
+    });
+  })();
+</script>
+{% endblock %}

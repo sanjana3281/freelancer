@@ -1,0 +1,269 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+  :root{
+    --bg:#0b1220; --panel:#111827; --panel2:#0f172a; --stroke:#1f2a44;
+    --text:#e9eef9; --muted:#a6b2c9;
+    --blue1:#38bdf8; --blue2:#2563eb; --vio1:#a855f7; --vio2:#7e22ce; --ok:#22c55e;
+    --r:16px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:500 16px/1.6 'Poppins',system-ui,sans-serif}
+
+  .hero{padding:28px 0;background:linear-gradient(135deg,#0c1426, #151f36);border-bottom:1px solid var(--stroke)}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+  .hero h1{margin:0;font-size:32px;font-weight:800}
+
+  .card{background:linear-gradient(180deg,var(--panel), var(--panel2));border:1px solid var(--stroke);
+        border-radius:var(--r);padding:22px;margin:22px 0}
+
+  /* stepper */
+  .stepper{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  .badge{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;border:1px solid #213053;background:#0f1a2f}
+  .dot{width:10px;height:10px;border-radius:50%}
+  .done .dot{background:var(--ok)}
+  .active{border-color:#4c67b7}
+  .active .dot{background:linear-gradient(90deg,var(--blue1),var(--blue2))}
+  .muted{color:var(--muted)}
+  .section-title{margin:0 0 10px;font-size:18px}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .grid-1{display:grid;grid-template-columns:1fr;gap:14px}
+
+  .field{display:flex;flex-direction:column;gap:6px}
+  .label{font-size:13px;color:var(--muted)}
+  input[type="text"], input[type="url"], input[type="email"], input[type="number"],
+  input[type="file"], select, textarea{
+    width:100%;padding:11px 12px;border-radius:12px;background:#0f1a2f;border:1px solid #213053;color:var(--text);
+  }
+  textarea{min-height:110px}
+  .err{color:#f87171;font-size:13px}
+
+  /* formset tables made pretty */
+  table{width:100%;border-collapse:separate;border-spacing:0 8px}
+  th{color:#9fb0cc;font-weight:700;text-align:left;font-size:13px;padding:6px 8px}
+  td{background:#0f1a2f;border:1px solid #213053;padding:6px 8px}
+  tr td:first-child{border-radius:12px 0 0 12px}
+  tr td:last-child{border-radius:0 12px 12px 0}
+
+  .actions{display:flex;gap:10px;justify-content:space-between;margin-top:12px}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;border:1px solid transparent;cursor:pointer;font-weight:800}
+  .btn:hover{opacity:.96;transform:translateY(-1px)}
+  .btn-ghost{background:#0f1a2f;border:1px solid #213053;color:#cbd5e1}
+  .btn-primary{background:linear-gradient(90deg,var(--blue1),var(--blue2));color:#06223a}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Edit Profile</h1>
+    <div class="muted">Step {{ step }} of {{ total_steps }}</div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- STEPPER -->
+  <div class="card">
+    <div class="stepper">
+        <div class="badge {% if step >= 1 %}done{% endif %} {% if step == 1 %}active{% endif %}">
+        <span class="dot"></span><span>1 · Basics</span>
+        </div>
+        <div class="badge {% if step >= 2 %}done{% endif %} {% if step == 2 %}active{% endif %}">
+        <span class="dot"></span><span>2 · Roles &amp; Skills</span>
+        </div>
+        <div class="badge {% if step >= 3 %}done{% endif %} {% if step == 3 %}active{% endif %}">
+        <span class="dot"></span><span>3 · Projects &amp; Achievements</span>
+        </div>
+        <div class="badge {% if step >= 4 %}done{% endif %} {% if step == 4 %}active{% endif %}">
+        <span class="dot"></span><span>4 · Contact &amp; Links</span>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for m in messages %}
+        <div class="muted">{{ m }}</div>
+        {% endfor %}
+    {% endif %}
+    </div>
+
+
+
+  <!-- STEP 1 -->
+  {% if step == 1 %}
+  <form method="post" enctype="multipart/form-data" class="card">
+    {% csrf_token %}
+    <h3 class="section-title">Basic information</h3>
+    <div class="grid">
+      <div class="field"><label class="label">Headline</label>{{ form.headline }}</div>
+      <div class="field"><label class="label">Bio</label>{{ form.bio }}</div>
+      <div class="field"><label class="label">Profile photo</label>{{ form.profile_photo }}</div>
+      <div class="field"><label class="label">Country</label>{{ form.location_country }}</div>
+      <div class="field"><label class="label">City</label>{{ form.location_city }}</div>
+      <div class="field"><label class="label">Timezone</label>{{ form.timezone }}</div>
+      <div class="field"><label class="label">Experience (years)</label>{{ form.years_experience }}</div>
+      <div class="field"><label class="label">Hourly rate</label>{{ form.hourly_rate }}</div>
+      <div class="field"><label class="label">Work mode</label>{{ form.work_modes }}</div>
+      <div class="field"><label class="label">Work authorization</label>{{ form.work_authorization }}</div>
+      <div class="field"><label class="label">Travel ready</label>{{ form.travel_ready }}</div>
+    </div>
+    <div class="actions">
+      <a class="btn btn-ghost" href="{% url 'freelancer_dashboard' %}">Cancel</a>
+      <button class="btn btn-primary" type="submit">Save & Continue →</button>
+    </div>
+  </form>
+  {% endif %}
+
+  <!-- STEP 2 -->
+  {% if step == 2 %}
+  <form method="post" class="card">
+    {% csrf_token %}
+    <h3 class="section-title">Roles</h3>
+    {{ role_fs.management_form }}
+    <table>
+      <thead><tr><th>Role</th><th>Delete</th></tr></thead>
+      <tbody>
+        {% for f in role_fs %}
+        <tr>
+          <td>{{ f.role }}</td>
+          <td>{{ f.DELETE }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h3 class="section-title">Skills</h3>
+    {{ skill_fs.management_form }}
+    <table>
+      <thead><tr><th>Skill</th><th>Level</th><th>Years</th><th>Delete</th></tr></thead>
+      <tbody>
+        {% for f in skill_fs %}
+        <tr>
+          <td>{{ f.skill }}</td>
+          <td>{{ f.level }}</td>
+          <td>{{ f.years }}</td>
+          <td>{{ f.DELETE }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h3 class="section-title">Languages</h3>
+    {{ lang_fs.management_form }}
+    <table>
+      <thead><tr><th>Language</th><th>Proficiency</th><th>Delete</th></tr></thead>
+      <tbody>
+        {% for f in lang_fs %}
+        <tr>
+          <td>{{ f.language }}</td>
+          <td>{{ f.proficiency }}</td>
+          <td>{{ f.DELETE }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="actions">
+      <a class="btn btn-ghost" href="{% url 'freelancer_profile_edit_step' 1 %}">← Back</a>
+      <button class="btn btn-primary" type="submit">Save & Continue →</button>
+    </div>
+  </form>
+  {% endif %}
+
+  <!-- STEP 3 -->
+  {% if step == 3 %}
+  <form method="post" class="card">
+    {% csrf_token %}
+    <h3 class="section-title">Projects</h3>
+    {{ proj_fs.management_form }}
+    <table>
+      <thead><tr><th>Title</th><th>Role</th><th>Tech</th><th>Demo</th><th>Repo</th><th>Start</th><th>End</th><th>Delete</th></tr></thead>
+      <tbody>
+      {% for f in proj_fs %}
+        <tr>
+          <td>{{ f.title }}</td>
+          <td>{{ f.role_title }}</td>
+          <td>{{ f.tech_stack }}</td>
+          <td>{{ f.demo_url }}</td>
+          <td>{{ f.repo_url }}</td>
+          <td>{{ f.start_date }}</td>
+          <td>{{ f.end_date }}</td>
+          <td>{{ f.DELETE }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+
+    <h3 class="section-title">Achievements</h3>
+    {{ ach_fs.management_form }}
+    <table>
+      <thead><tr><th>Title</th><th>Description</th><th>Date</th><th>Delete</th></tr></thead>
+      <tbody>
+      {% for f in ach_fs %}
+        <tr>
+          <td>{{ f.title }}</td>
+          <td>{{ f.description }}</td>
+          <td>{{ f.date }}</td>
+          <td>{{ f.DELETE }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+
+    <h3 class="section-title">Publications</h3>
+    {{ pub_fs.management_form }}
+    <table>
+      <thead><tr><th>Title</th><th>Link</th><th>Description</th><th>Date</th><th>Delete</th></tr></thead>
+      <tbody>
+      {% for f in pub_fs %}
+        <tr>
+          <td>{{ f.title }}</td>
+          <td>{{ f.link }}</td>
+          <td>{{ f.description }}</td>
+          <td>{{ f.date }}</td>
+          <td>{{ f.DELETE }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="actions">
+      <a class="btn btn-ghost" href="{% url 'freelancer_profile_edit_step' 2 %}">← Back</a>
+      <button class="btn btn-primary" type="submit">Save & Continue →</button>
+    </div>
+  </form>
+  {% endif %}
+
+  <!-- STEP 4 -->
+  {% if step == 4 %}
+  <form method="post" enctype="multipart/form-data" class="card">
+    {% csrf_token %}
+    <h3 class="section-title">Contact & Links</h3>
+    <div class="grid">
+      <div class="field"><label class="label">GitHub</label>{{ form.github_url }}</div>
+      <div class="field"><label class="label">Portfolio</label>{{ form.portfolio_link }}</div>
+      <div class="field"><label class="label">Publications</label>{{ form.publications_link }}</div>
+      <div class="field"><label class="label">Email</label>{{ form.contact_email }}</div>
+      <div class="field"><label class="label">Phone</label>{{ form.contact_phone }}</div>
+      <div class="field"><label class="label">WhatsApp</label>{{ form.contact_whatsapp }}</div>
+      <div class="field"><label class="label">Résumé file</label>{{ form.resume_file }}</div>
+    </div>
+
+    <div class="actions">
+      <a class="btn btn-ghost" href="{% url 'freelancer_profile_edit_step' 3 %}">← Back</a>
+      <button class="btn btn-primary" type="submit">Save & Finish</button>
+    </div>
+  </form>
+  {% endif %}
+
+</main>
+</body>
+</html>

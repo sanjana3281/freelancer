@@ -1,0 +1,138 @@
+/* === Recruiter Profile Styles === */
+.profile-shell { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
+
+.profile-hero {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 24px; border-radius: 20px;
+  background: linear-gradient(135deg, rgba(96,165,250,.15), rgba(168,85,247,.15));
+  border: 1px solid rgba(255,255,255,.08);
+  margin-bottom: 22px;
+}
+
+.profile-header-left { display: flex; gap: 18px; align-items: center; }
+.profile-avatar {
+  width: 80px; height: 80px; border-radius: 16px;
+  object-fit: cover;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+}
+.profile-avatar.placeholder { display: grid; place-items: center; font-size: 36px; }
+
+.profile-title { margin: 0; font-size: 28px; font-weight: 800; }
+.profile-subtitle { margin: 4px 0 8px; opacity: .85; }
+
+.profile-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  padding: 6px 10px; border-radius: 999px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.12);
+  font-size: 13px;
+}
+
+.profile-header-actions { display: flex; gap: 10px; }
+.btn {
+  display: inline-flex; align-items: center; padding: 10px 16px;
+  border-radius: 10px; text-decoration: none; font-weight: 600;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #60a5fa, #22d3ee);
+  color: #001018;
+}
+.btn-secondary {
+  background: rgba(255,255,255,.08); color: #cfe8ff;
+  border: 1px solid rgba(255,255,255,.12);
+}
+
+.profile-card {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 16px;
+  padding: 20px;
+}
+.profile-card.full { grid-column: 1 / -1; }
+
+.profile-grid {
+  display: grid; gap: 18px; grid-template-columns: 1fr 1fr;
+  margin-top: 18px;
+}
+@media(max-width: 768px) { .profile-grid { grid-template-columns: 1fr; } }
+
+
+
+
+/* Recruiter Edit – matches your freelancer edit aesthetic */
+
+.rx-shell{max-width:1100px;margin:28px auto 60px;padding:0 20px}
+.rx-hero{
+  padding:22px;border-radius:20px;
+  background:linear-gradient(135deg,rgba(96,165,250,.15),rgba(168,85,247,.15));
+  border:1px solid rgba(255,255,255,.08);margin-bottom:18px
+}
+.rx-title{margin:0;font-size:28px;font-weight:800}
+.rx-subtitle{margin:6px 0 2px;opacity:.9}
+
+.rx-form{display:grid;gap:16px}
+.rx-card{
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:16px;padding:18px
+}
+.rx-card-title{margin:0 0 12px;font-weight:800}
+
+.rx-grid{
+  display:grid;gap:14px;
+  grid-template-columns:1fr 1fr
+}
+@media(max-width:820px){.rx-grid{grid-template-columns:1fr}}
+.rx-col-2{grid-column:1/-1}
+
+.rx-field{display:grid;gap:8px}
+.rx-field label{font-weight:600;opacity:.95}
+
+/* Inputs like freelancer edit */
+.rx-card input[type="text"],
+.rx-card input[type="url"],
+.rx-card input[type="email"],
+.rx-card input[type="number"],
+.rx-card input[type="file"],
+.rx-card select,
+.rx-card textarea{
+  width:100%;color:#eaf6ff;
+  background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;padding:10px 12px;
+  outline:none
+}
+.rx-card textarea{min-height:120px}
+
+/* Buttons */
+.rx-actions{display:flex;gap:10px;justify-content:flex-end}
+.rx-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:10px 16px;border-radius:12px;text-decoration:none;
+  font-weight:700;border:1px solid transparent
+}
+.rx-btn-primary{
+  background:linear-gradient(135deg,#60a5fa,#22d3ee);
+  color:#001018;box-shadow:0 8px 24px rgba(34,211,238,.22)
+}
+.rx-btn-ghost{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);color:#cfe8ff}
+
+
+/* Action card under Contact */
+.profile-action{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  min-height:120px;margin-top:16px;
+}
+.profile-action .copy h2{margin:0 0 6px;font-weight:800}
+.profile-action .copy p{margin:0;opacity:.9}
+.btn-wide{padding:12px 18px;font-size:15px}
+@media(max-width:900px){
+  .profile-action{flex-direction:column;align-items:flex-start}
+  .btn-wide{width:100%}
+}
+
+/* in case your base styles don’t already define these */
+.btn{display:inline-flex;align-items:center;justify-content:center;border-radius:12px;
+     padding:10px 16px;text-decoration:none;font-weight:700;border:1px solid transparent}
+.btn-primary{background:linear-gradient(135deg,#60a5fa,#22d3ee);color:#001018}

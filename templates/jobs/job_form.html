@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/job-edit.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="jx-shell">
+  <header class="jx-hero">
+    <div>
+      <h1 class="jx-title">{% if mode == 'edit' %}Edit Job{% else %}Post a Job{% endif %}</h1>
+      <p class="jx-subtitle">Describe the role clearly and add the must-have skills.</p>
+    </div>
+    <a class="jx-btn jx-btn-ghost" href="{% url 'my_jobs' %}">← Back to My Jobs</a>
+  </header>
+
+  <form method="post" class="jx-form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <!-- BASICS -->
+    <section class="jx-card">
+      <h3 class="jx-card-title">Basics</h3>
+      <div class="jx-grid">
+        <div class="jx-field jx-col-2">
+          <label>Title</label>
+          {{ form.title }}
+        </div>
+
+        <div class="jx-field">
+          <label>Job type</label>
+          {{ form.job_type }}
+        </div>
+
+        <div class="jx-field">
+          <label>Work mode</label>
+          {{ form.work_mode }}
+        </div>
+
+        <div class="jx-field">
+          <label>City</label>
+          {{ form.location_city }}
+        </div>
+
+        <div class="jx-field">
+          <label>Country</label>
+          {{ form.location_country }}
+        </div>
+
+        <div class="jx-field jx-col-2">
+          <label>Description</label>
+          {{ form.description }}
+        </div>
+      </div>
+    </section>
+
+    <!-- REQUIREMENTS -->
+    <section class="jx-card">
+      <h3 class="jx-card-title">Requirements</h3>
+      <div class="jx-grid">
+        <div class="jx-field">
+          <label>Experience (e.g., 2–5)</label>
+          {{ form.experience_required }}
+        </div>
+        <div class="jx-field">
+          <label>Education</label>
+          {{ form.education_required }}
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPENSATION -->
+    <section class="jx-card">
+      <h3 class="jx-card-title">Compensation & Status</h3>
+      <div class="jx-grid">
+        <div class="jx-field">
+          <label>Salary min</label>
+          {{ form.salary_min }}
+        </div>
+        <div class="jx-field">
+          <label>Salary max</label>
+          {{ form.salary_max }}
+        </div>
+        <div class="jx-field">
+          <label>Currency</label>
+          {{ form.currency }}
+        </div>
+        <div class="jx-field">
+          <label>Application deadline</label>
+          {{ form.application_deadline }}
+        </div>
+        <div class="jx-field">
+          <label>Active</label>
+          {{ form.is_active }}
+        </div>
+      </div>
+    </section>
+
+    <!-- SKILLS (FORMSET) -->
+    <section class="jx-card">
+      <h3 class="jx-card-title">Skills</h3>
+      <p class="jx-hint">Mark at least one skill as <b>Must-have</b>.</p>
+
+      {{ formset.management_form }}
+      <div class="jx-skill-rows">
+        {% for f in formset.forms %}
+          <div class="jx-skill-row">
+            {{ f.id }}
+            <div class="jx-field">
+              <label>Skill</label>
+              {{ f.skill }}
+            </div>
+            <div class="jx-field">
+              <label>Importance</label>
+              {{ f.importance }}
+            </div>
+            <div class="jx-field jx-delete">
+              <label>Delete</label>
+              {{ f.DELETE }}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <div class="jx-actions">
+      <button type="submit" class="jx-btn jx-btn-primary">
+        {% if mode == 'edit' %}Save Changes{% else %}Publish{% endif %}
+      </button>
+      <a class="jx-btn jx-btn-ghost" href="{% url 'my_jobs' %}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+
+

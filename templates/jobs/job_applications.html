@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container container-narrow mt-4">
+
+  <div class="can-title" style="margin-bottom:8px;">Applicants — {{ job.title }}</div>
+  <div class="can-muted" style="margin-bottom:18px;">
+    {{ job.recruiter.recruiter.company_name }}
+  </div>
+
+  {% if apps %}
+    <div class="can-grid-1" style="gap:16px;">
+      {% for a in apps %}
+        <div class="can-card can-pad" style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;gap:14px;align-items:center;">
+            <div style="width:44px;height:44px;border-radius:12px;background:var(--chip);display:flex;align-items:center;justify-content:center;">
+              🧑‍💻
+            </div>
+            <div>
+              <div style="font-weight:700;">
+                {{ a.freelancer.full_name|default:a.freelancer.freelancer.name }}
+              </div>
+              <div class="can-muted" style="font-size:13px;">
+                {{ a.freelancer.city }} {{ a.freelancer.country }}
+                {% if a.expected_salary %} • ₹{{ a.expected_salary }}{% endif %}
+                {% if a.availability_date %} • available {{ a.availability_date }}{% endif %}
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <a href="{% url 'job_application_detail' a.id %}" class="can-btn-outline">Open</a>
+            <a href="{% url 'recruiter_view_freelancer_profile' a.freelancer.id %}" class="can-btn-outline">Profile</a>
+            {% if a.resume %}
+              <a href="{{ a.resume.url }}" class="can-btn-outline" target="_blank" rel="noopener">Resume</a>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="can-card can-pad">No applications yet.</div>
+  {% endif %}
+
+  <div style="margin-top:16px;">
+    <a class="can-btn-outline" href="{% url 'my_jobs' %}">← Back to My Jobs</a>
+  </div>
+</div>
+{% endblock %}

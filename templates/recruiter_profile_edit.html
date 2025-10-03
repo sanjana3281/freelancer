@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/recruiter-edit.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="rx-shell">
+  <header class="rx-hero">
+    <h1 class="rx-title">✏️ Edit Company Profile</h1>
+    <p class="rx-subtitle">Keep your company details fresh and professional for candidates.</p>
+  </header>
+
+  <form method="post" enctype="multipart/form-data" class="rx-form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <!-- BASICS -->
+    <section class="rx-card">
+      <h3 class="rx-card-title">Basics</h3>
+      <div class="rx-grid">
+        <div class="rx-field">
+          <label>Company website</label>
+          {{ form.company_website }}
+        </div>
+        <div class="rx-field">
+          <label>Industry</label>
+          {{ form.industry }}
+        </div>
+        <div class="rx-field rx-col-2">
+          <label>About company</label>
+          {{ form.about_company }}
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPANY INFO -->
+    <section class="rx-card">
+      <h3 class="rx-card-title">Company Info</h3>
+      <div class="rx-grid">
+        <div class="rx-field">
+          <label>Founded year</label>
+          {{ form.founded_year }}
+        </div>
+        <div class="rx-field">
+          <label>HQ city</label>
+          {{ form.headquarters_city }}
+        </div>
+        <div class="rx-field">
+          <label>HQ country</label>
+          {{ form.headquarters_country }}
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="rx-card">
+      <h3 class="rx-card-title">Contact</h3>
+      <div class="rx-grid">
+        <div class="rx-field">
+          <label>Alternate email</label>
+          {{ form.contact_email_alt }}
+        </div>
+        <div class="rx-field">
+          <label>Phone</label>
+          {{ form.contact_phone }}
+        </div>
+        <div class="rx-field rx-col-2">
+          <label>LinkedIn</label>
+          {{ form.linkedin_url }}
+        </div>
+      </div>
+    </section>
+
+    <!-- BRANDING -->
+    <section class="rx-card">
+      <h3 class="rx-card-title">Branding</h3>
+      <div class="rx-grid">
+        <div class="rx-field rx-col-2">
+          <label>Company logo</label>
+          {{ form.logo }}
+        </div>
+      </div>
+    </section>
+
+    <div class="rx-actions">
+      <button type="submit" class="rx-btn rx-btn-primary">💾 Save changes</button>
+      <a href="{% url 'recruiter_profile_detail' %}" class="rx-btn rx-btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

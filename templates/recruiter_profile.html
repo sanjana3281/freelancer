@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load static %}
+{% block head %}
+  <link rel="stylesheet" href="{% static 'css/recruiter.css' %}">
+{% endblock %}
+{% block content %}
+<div class="profile-shell">
+
+  <!-- Header / Hero -->
+  <section class="profile-hero">
+    <div class="profile-header-left">
+      {% if profile.logo %}
+        <img src="{{ profile.logo.url }}" alt="Logo" class="profile-avatar">
+      {% else %}
+        <div class="profile-avatar placeholder">🏢</div>
+      {% endif %}
+
+      <div>
+        <h1 class="profile-title">{{ recruiter.company_name }}</h1>
+        <p class="profile-subtitle">{{ profile.get_industry_display|default:"—" }}</p>
+
+        <div class="profile-chips">
+          {% if profile.founded_year %}
+            <span class="chip">Founded {{ profile.founded_year }}</span>
+          {% endif %}
+          {% if profile.headquarters_city or profile.headquarters_country %}
+            <span class="chip">{{ profile.headquarters_city }} {{ profile.headquarters_country }}</span>
+          {% endif %}
+          <span class="chip">Jobs posted: {{ profile.jobs_posted_count }}</span>
+          <span class="chip">Active: {{ profile.active_jobs }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-header-actions">
+      <a href="{% url 'recruiter_profile_edit' %}" class="btn btn-primary">Edit Profile</a>
+      {% if profile.company_website %}
+        <a href="{{ profile.company_website }}" class="btn btn-secondary" target="_blank">Visit Website</a>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section class="profile-card full">
+    <h2>About</h2>
+    <p>{{ profile.about_company|default:"Add a description about your company, culture and mission." }}</p>
+  </section>
+
+  <!-- Grid Info -->
+  <div class="profile-grid">
+    <section class="profile-card">
+      <h2>Company</h2>
+      <p><b>Industry:</b> {{ profile.get_industry_display|default:"—" }}</p>
+      <p><b>Founded:</b> {{ profile.founded_year|default:"—" }}</p>
+      <p><b>Headquarters:</b> {{ profile.headquarters_city }} {{ profile.headquarters_country }}</p>
+    </section>
+
+    <section class="profile-card">
+      <h2>Contact</h2>
+      <p><b>Email:</b> {{ recruiter.email }}</p>
+      <p><b>Alt Email:</b> {{ profile.contact_email_alt|default:"—" }}</p>
+      <p><b>Phone:</b> {{ profile.contact_phone|default:"—" }}</p>
+      <p><b>LinkedIn:</b> 
+        {% if profile.linkedin_url %}
+          <a href="{{ profile.linkedin_url }}" target="_blank">{{ profile.linkedin_url }}</a>
+        {% else %} — {% endif %}
+      </p>
+    </section>
+      <!-- Create a Job (below Company) -->
+  <section class="profile-card profile-action">
+    <div class="copy">
+      <h2>Create a Job</h2>
+      <p>Post a new opening, set requirements, and start hiring.</p>
+    </div>
+    <a class="btn btn-primary btn-wide" href="{% url 'job_create' %}">+ Create Job</a>
+  </section>
+
+  <!-- View My Jobs (below Contact) -->
+  <section class="profile-card profile-action">
+    <div class="copy">
+      <h2>View My Jobs</h2>
+      <p>See all your postings, edit details, or close roles.</p>
+    </div>
+    <a class="btn btn-secondary btn-wide" href="{% url 'my_jobs' %}">View Jobs →</a>
+  </section>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="can-wrap can-split">
+
+  <div class="can-card can-pad-lg">
+    <div style="display:flex;gap:14px;align-items:center;margin-bottom:10px;">
+      {% if job.recruiter.logo %}
+        <img src="{{ job.recruiter.logo.url }}" alt="" style="width:54px;height:54px;border-radius:12px;object-fit:cover;border:1px solid var(--border);">
+      {% else %}
+        <div style="width:54px;height:54px;border-radius:12px;background:var(--chip);border:1px solid var(--border);"></div>
+      {% endif %}
+      <div>
+        <div class="can-title" style="font-size:28px;">{{ job.title }}</div>
+        <div class="can-muted" style="font-size:14px;">
+          {{ job.recruiter.recruiter.company_name }} · {{ job.location_city }} {{ job.location_country }}
+        </div>
+      </div>
+    </div>
+
+    <div class="can-chips" style="margin:8px 0 16px;">
+      <span class="can-chip">{{ job.get_job_type_display }}</span>
+      <span class="can-chip">{{ job.get_work_mode_display }}</span>
+      {% if job.experience_required %}<span class="can-chip">{{ job.experience_required }} yrs</span>{% endif %}
+    </div>
+
+    <h3 style="margin:10px 0 6px;">Description</h3>
+    <p class="can-muted" style="line-height:1.7;">{{ job.description|linebreaks }}</p>
+
+    {% if job.job_skills.all %}
+      <h3 style="margin:18px 0 6px;">Skills</h3>
+      <div class="can-chips">
+        {% for js in job.job_skills.all %}
+          <span class="can-chip">{{ js.skill.name }}{% if js.importance == "MUST_HAVE" %} • must-have{% endif %}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="can-card can-pad-lg">
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      {% if job.salary_min or job.salary_max %}
+        <div>
+          <div class="can-muted" style="font-size:12px;">Compensation</div>
+          <div style="font-weight:700;">
+            {{ job.currency }} {{ job.salary_min }} – {{ job.salary_max }}
+          </div>
+        </div>
+      {% endif %}
+
+      {% if job.application_deadline %}
+        <div>
+          <div class="can-muted" style="font-size:12px;">Apply before</div>
+          <div style="font-weight:700;">{{ job.application_deadline }}</div>
+        </div>
+      {% endif %}
+
+      <div style="margin-top:6px;">
+  {% if can_apply %}
+    <a href="{% url 'job_apply' job.id %}" class="can-btn" style="width:100%;text-align:center;">Apply Now</a>
+
+  {% elif why_cant_apply == "closed" %}
+    <span class="can-badge">This job is closed</span>
+
+  {% elif why_cant_apply == "applied" %}
+    <span class="can-badge">Already applied</span>
+
+  {% elif why_cant_apply == "no_profile" and is_freelancer %}
+    <a href="{% url 'freelancer_profile_edit' %}" class="can-btn" style="width:100%;text-align:center;">
+      Complete your profile to apply
+    </a>
+
+  {% else %}
+    <a href="{% url 'login_page' %}" class="can-btn" style="width:100%;text-align:center;">Login to apply</a>
+  {% endif %}
+</div>
+
+
+
+      <div style="border-top:1px solid var(--border); padding-top:14px;">
+        <div class="can-muted" style="font-size:12px;">Company</div>
+        <div style="font-weight:700;">{{ job.recruiter.recruiter.company_name }}</div>
+        {% if job.recruiter.company_website %}
+          <a class="can-badge" href="{{ job.recruiter.company_website }}" target="_blank" style="margin-top:8px;">Visit website</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
