@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container container-narrow mt-4">
+  <div class="can-card can-pad">
+    <div class="can-title">Confirm completion</div>
+    <p>Confirm that you completed <b>{{ app.job.title }}</b> for {{ app.job.recruiter.company_name }}?</p>
+    <form method="post">{% csrf_token %}
+      <button class="btn">Yes, mark completed</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

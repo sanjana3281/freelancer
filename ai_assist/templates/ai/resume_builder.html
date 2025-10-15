@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container container-narrow mt-4">
+
+  <div class="can-card can-pad-lg">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+      <h2 class="can-title" style="margin:0;">Resume Builder</h2>
+      <a class="can-btn-outline" href="{% url 'ai:ai_resume_print' %}" target="_blank">Preview / Download PDF →</a>
+    </div>
+  </div>
+
+  <form method="post" class="can-card can-pad-lg" style="margin-top:16px;">
+    {% csrf_token %}
+
+    <h4 class="can-title" style="margin:0 0 8px;">Profile</h4>
+    <div class="can-grid-2 g-3">
+      {{ pform.non_field_errors }}
+      <div>{{ pform.headline.label_tag }} {{ pform.headline }}</div>
+      <div>{{ pform.email.label_tag }} {{ pform.email }}</div>
+      <div>{{ pform.phone.label_tag }} {{ pform.phone }}</div>
+      <div>{{ pform.city.label_tag }} {{ pform.city }}</div>
+      <div>{{ pform.country.label_tag }} {{ pform.country }}</div>
+      <div>{{ pform.linkedin_url.label_tag }} {{ pform.linkedin_url }}</div>
+      <div>{{ pform.github_url.label_tag }} {{ pform.github_url }}</div>
+      <div>{{ pform.portfolio_url.label_tag }} {{ pform.portfolio_url }}</div>
+      <div class="can-grid-1" style="grid-column:1/-1;">
+        {{ pform.summary.label_tag }} {{ pform.summary }}
+      </div>
+    </div>
+
+    <hr class="can-rule" style="margin:18px 0;">
+
+    <h4 class="can-title" style="margin:0 0 8px;">Projects</h4>
+    {{ proj_fs.management_form }}
+    {% for f in proj_fs %}
+      <div class="can-card can-pad" style="margin-bottom:10px;">
+        {{ f.non_field_errors }}
+        <div class="can-grid-2 g-3">
+          <div>{{ f.title.label_tag }} {{ f.title }}</div>
+          <div>{{ f.role_title.label_tag }} {{ f.role_title }}</div>
+          <div>{{ f.start_date.label_tag }} {{ f.start_date }}</div>
+          <div>{{ f.end_date.label_tag }} {{ f.end_date }}</div>
+          <div class="can-grid-1" style="grid-column:1/-1;">
+            {{ f.description.label_tag }} {{ f.description }}
+          </div>
+          <div class="can-grid-1" style="grid-column:1/-1;">
+            {{ f.bullets.label_tag }} {{ f.bullets }}
+            <div class="can-muted" style="font-size:12px;">One bullet per line. Use action+impact+metric.</div>
+          </div>
+          <div>{{ f.demo_url.label_tag }} {{ f.demo_url }}</div>
+          <div>{{ f.github_url.label_tag }} {{ f.github_url }}</div>
+          {% if proj_fs.can_delete %}<div>{{ f.DELETE }} <label>Delete</label></div>{% endif %}
+        </div>
+      </div>
+    {% endfor %}
+
+    <hr class="can-rule" style="margin:18px 0;">
+
+    <h4 class="can-title" style="margin:0 0 8px;">Achievements</h4>
+    {{ ach_fs.management_form }}
+    {% for f in ach_fs %}
+      <div class="can-card can-pad" style="margin-bottom:10px;">
+        <div class="can-grid-2 g-3">
+          <div>{{ f.title.label_tag }} {{ f.title }}</div>
+          <div>{{ f.date.label_tag }} {{ f.date }}</div>
+          <div class="can-grid-1" style="grid-column:1/-1;">{{ f.description.label_tag }} {{ f.description }}</div>
+          {% if ach_fs.can_delete %}<div>{{ f.DELETE }} <label>Delete</label></div>{% endif %}
+        </div>
+      </div>
+    {% endfor %}
+
+    <hr class="can-rule" style="margin:18px 0;">
+
+    <h4 class="can-title" style="margin:0 0 8px;">Publications</h4>
+    {{ pub_fs.management_form }}
+    {% for f in pub_fs %}
+      <div class="can-card can-pad" style="margin-bottom:10px;">
+        <div class="can-grid-2 g-3">
+          <div>{{ f.title.label_tag }} {{ f.title }}</div>
+          <div>{{ f.date.label_tag }} {{ f.date }}</div>
+          <div>{{ f.link.label_tag }} {{ f.link }}</div>
+          <div class="can-grid-1" style="grid-column:1/-1;">{{ f.description.label_tag }} {{ f.description }}</div>
+          {% if pub_fs.can_delete %}<div>{{ f.DELETE }} <label>Delete</label></div>{% endif %}
+        </div>
+      </div>
+    {% endfor %}
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px;">
+      <a class="can-btn-outline" href="{% url 'ai:ai_resume_print' %}" target="_blank">Preview</a>
+      <button class="can-btn" type="submit">Save</button>
+    </div>
+  </form>
+
+  <div class="can-muted" style="margin-top:10px;">
+    Tip: keep 2–3 projects, 4–6 strong bullets total, use numbers (%, ↑, ↓, time saved).
+  </div>
+</div>
+{% endblock %}

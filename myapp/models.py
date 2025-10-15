@@ -1,6 +1,7 @@
 from django.db import models
 
 # Create your models here.
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 from django.utils import timezone
 from datetime import timedelta
@@ -53,7 +54,8 @@ class FreelancerProfile(models.Model):
     contact_phone = models.CharField(max_length=20, blank=True)
     contact_whatsapp = models.CharField(max_length=20, blank=True)
     contact_email = models.EmailField(blank=True)
-
+    summary = models.TextField(blank=True, default="")          # new
+    linkedin_url = models.URLField(blank=True, default="")
     avg_response_time_hours = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -303,8 +305,7 @@ class JobSkill(models.Model):
 
 #application
 
-from django.db import models
-from django.utils import timezone
+
 
 class Application(models.Model):
     job = models.ForeignKey("Job", on_delete=models.CASCADE, related_name="applications")
@@ -401,3 +402,38 @@ class ApplicationFlow(models.Model):
         except Exception:
             return f"Flow({self.application_id})"
 
+
+
+# models.py
+class Review(models.Model):
+    """
+    One review per side per application after completion.
+    Start with just recruiter->freelancer (what you asked).
+    """
+    application = models.OneToOneField("Application", on_delete=models.CASCADE, related_name="review_from_recruiter")
+    reviewer = models.ForeignKey("Recruiter", on_delete=models.CASCADE)
+    reviewee = models.ForeignKey("Freelancer", on_delete=models.CASCADE)
+    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def _str_(self):
+        return f"Review(app={self.application_id}, {self.rating}★)"
+
+
+
+#for emails / notification
+# myapp/models.py
+
+class Notification(models.Model):
+    freelancer = models.ForeignKey("Freelancer", on_delete=models.CASCADE, related_name="notifications")
+    message = models.CharField(max_length=255)
+    url = models.CharField(max_length=512, blank=True)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def _str_(self):
+        return f"{self.freelancer.name} • {self.message[:40]}"

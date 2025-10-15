@@ -73,7 +73,7 @@
 
   <!-- Main -->
   <main class="main">
-    {#Invitations & Status #}
+    <!-- {#Invitations & Status #}
 {% if my_apps %}
   {% for app in my_apps %}
     {% with flow=app.flow %}
@@ -130,7 +130,7 @@
       {% endif %}
     {% endwith %}
   {% endfor %}
-{% endif %}
+{% endif %} -->
 
     <!-- About -->
     <section class="can-card can-pad-lg">
@@ -296,6 +296,162 @@
         </div>
       </div>
     </section>
+  <section class="can-card can-pad" style="margin-top:18px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+    <div>
+      <div class="can-title" style="margin-bottom:2px;">AI Profile Assistant</div>
+      <div class="can-muted">Get suggestions & generate a one-page resume draft.</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <!-- <a class="can-btn" href="{% url 'ai:resume_form' %}">Analyze profile</button> -->
+      <a class="can-btn" href="{% url 'ai:resume_form' %}">Generate resume</a>
+    </div>
+  </div>
+  <div id="ai-output" class="can-card can-pad" style="margin-top:12px; display:none;"></div>
+</section>
+
+<a class="can-btn" href="{% url 'ai:resume_chat' %}"
+   style="background:linear-gradient(135deg,#34d399,#22d3ee);color:#001016;">
+  💬 Chat with AI Resume Coach
+</a>
+<!-- 
+<form id="resume-upload-form" enctype="multipart/form-data">
+  {% csrf_token %}
+  <input type="file" name="resume" id="resume-input" accept=".pdf,.docx,.txt">
+  <button type="button" id="btn-upload-analyze" class="can-btn">Analyze My Resume</button>
+</form> -->
+
+<!-- <div id="ai-upload-output" class="can-card can-pad" style="display:none;"></div> -->
+
+
+
   </main>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // ---------- helpers ----------
+  const $ = (sel) => document.querySelector(sel);
+
+  // read csrftoken from cookie (Django default)
+  function getCSRF() {
+    const m = document.cookie.match(/(?:^|;)\s*csrftoken=([^;]+)/);
+    return m ? decodeURIComponent(m[1]) : '';
+  }
+
+  // show HTML in a block
+  function showIn(el, html) {
+    el.style.display = 'block';
+    el.innerHTML = html;
+  }
+
+  // small POST helper for x-www-form-urlencoded
+  async function postForm(url, dataObj) {
+    const body = new URLSearchParams(dataObj);
+    const res  = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCSRF(),
+        'X-Requested-With': 'fetch',
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+      },
+      body
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  }
+
+  // ---------- Generate Resume (Markdown) ----------
+  const out = $('#ai-output');
+  const btnGen = $('#btn-ai-resume');
+
+  if (btnGen && out) {
+    btnGen.onclick = async () => {
+      showIn(out, 'Generating resume …');
+      try {
+        const r = await postForm("{% url 'ai:ai_generate_resume' %}", {}); // expects { ok, markdown }
+        showIn(out, `
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <h4 class="can-title" style="margin:0;">Resume (Markdown)</h4>
+            <div style="display:flex;gap:8px;">
+              <button id="btn-copy"  class="can-btn-outline">Copy</button>
+              <button id="btn-dl-md" class="can-btn-outline">Download .md</button>
+              <a class="can-btn-outline" href="{% url 'ai:ai_resume_preview' %}" target="_blank">Download PDF</a>
+            </div>
+          </div>
+          <pre id="md" style="white-space:pre-wrap;margin-top:10px;">${r.markdown || '(empty)'}</pre>
+        `);
+
+        // copy
+        const copyBtn = $('#btn-copy');
+        copyBtn.onclick = async () => {
+          await navigator.clipboard.writeText($('#md').innerText);
+          copyBtn.textContent = 'Copied!';
+          setTimeout(() => (copyBtn.textContent = 'Copy'), 1200);
+        };
+
+        // download .md
+        const dlBtn = $('#btn-dl-md');
+        dlBtn.onclick = () => {
+          const md = $('#md').innerText;
+          const blob = new Blob([md], { type: 'text/markdown' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'resume.md';
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 500);
+        };
+      } catch (e) {
+        showIn(out, `<div class="can-error">Error: ${e.message}</div>`);
+      }
+    };
+  }
+
+  // ---------- Analyze Uploaded Resume (Gemini) ----------
+  const btnAnalyze = $('#btn-upload-analyze');
+  const form       = $('#resume-upload-form');
+  const outUpload  = $('#ai-upload-output');
+
+  if (btnAnalyze && form && outUpload) {
+    btnAnalyze.onclick = async () => {
+      try {
+        const fileInput = $('#resume-input');
+        if (!fileInput || !fileInput.files[0]) {
+          alert('Please choose a resume file (.pdf, .docx, .txt).');
+          return;
+        }
+
+        const formData = new FormData(form); // includes 'resume' + csrf token (thanks to {% csrf_token %})
+        showIn(outUpload, 'Analyzing…');
+
+        const res = await fetch("{% url 'ai:ai_analyze_uploaded_resume' %}", {
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCSRF(), 'X-Requested-With': 'fetch' },
+          body: formData
+        });
+
+        if (!res.ok) {
+          const txt = await res.text();
+          showIn(outUpload, `<div class="can-error">Request failed (${res.status}). ${txt}</div>`);
+          return;
+        }
+
+        const data = await res.json();
+        showIn(outUpload, data.ok
+          ? (data.feedback || 'No feedback returned.')
+          : `<div class="can-error">${data.error || 'Unknown error'}</div>`
+        );
+      } catch (e) {
+        showIn(outUpload, `<div class="can-error">Error: ${e.message}</div>`);
+        console.error(e);
+      }
+    };
+  } else {
+    console.warn('Analyze widgets not found: make sure #resume-upload-form, #resume-input, #btn-upload-analyze, #ai-upload-output exist.');
+  }
+});
+</script>
+
+
+
+
 {% endblock %}

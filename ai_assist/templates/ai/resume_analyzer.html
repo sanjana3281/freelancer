@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Resume Analysis{% endblock %}
+
+{% block content %}
+<div class="can-wrap container-narrow">
+
+  <section class="can-card can-pad-lg">
+    <div class="can-title">Resume Analysis</div>
+    <p class="can-muted">Upload your resume (PDF/DOCX/TXT). We’ll score it and suggest improvements.</p>
+
+    <form id="upload-form" method="post" enctype="multipart/form-data" action="{% url 'resume_analysis' %}">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <div style="display:flex; gap:8px;">
+        <button class="can-btn">Analyze</button>
+        <button id="analyze-ajax" type="button" class="can-btn-outline">Analyze (AJAX)</button>
+      </div>
+    </form>
+
+    <div id="result" style="margin-top:16px;"></div>
+
+    {% if latest %}
+      <hr>
+      <div class="can-title">Latest Result</div>
+      <div class="muted">Profile Strength: <b>{{ latest.score }}/100</b></div>
+      <ul>
+        {% for c in latest.report.checks %}
+          <li>{{ c.level|upper }} — {{ c.message }}</li>
+        {% endfor %}
+      </ul>
+      <div class="muted">Suggestions:</div>
+      <ul>
+        {% for s in latest.report.ai_suggestions_like %}
+          <li>{{ s }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </section>
+
+  {% if analyses %}
+  <section class="can-card can-pad">
+    <div class="can-title">History</div>
+    <ul>
+      {% for a in analyses %}
+        <li>{{ a.created_at|date:"d M H:i" }} — <b>{{ a.score }}</b>/100</li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</div>
+
+<script>
+function getCookie(name){ const m=document.cookie.match('(?:^|; )'+name.replace(/([.$?*|{}()[\]\\/+^])/g,'\\$1')+'=([^;]*)'); return m?decodeURIComponent(m[1]):null; }
+const csrftoken=getCookie('csrftoken');
+
+document.getElementById('analyze-ajax').onclick = async () => {
+  const f = document.querySelector('#upload-form input[type=file]').files[0];
+  if(!f){ alert("Choose a file first."); return; }
+
+  const fd = new FormData();
+  fd.append('file', f);
+
+  const res = await fetch("{% url 'resume_analysis_json' %}", {
+    method: 'POST',
+    headers: {'X-CSRFToken': csrftoken},
+    body: fd
+  });
+  const data = await res.json();
+  if(!data.ok){ document.getElementById('result').innerHTML = "<div class='can-error'>Upload failed.</div>"; return; }
+
+  const r = data.report;
+  document.getElementById('result').innerHTML = `
+    <div class="can-card can-pad">
+      <div class="can-title">Profile Strength: ${r.profile_strength}/100</div>
+      <ul>${r.headlines.map(h=>`<li>${h}</li>`).join("")}</ul>
+      <div class="can-muted">Checks</div>
+      <ul>${r.checks.map(c=>`<li>${c.level.toUpperCase()} — ${c.message}</li>`).join("")}</ul>
+      <div class="can-muted">AI Suggestions</div>
+      <ul>${r.ai_suggestions_like.map(s=>`<li>${s}</li>`).join("")}</ul>
+    </div>`;
+};
+</script>
+{% endblock %}

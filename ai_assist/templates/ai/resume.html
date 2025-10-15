@@ -1,0 +1,59 @@
+<!-- ai/templates/ai/resume.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="container container-narrow mt-4">
+  <div class="can-card can-pad">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h3 class="can-title" style="margin:0;">Resume (Markdown)</h3>
+      <button id="btn-copy" class="can-btn-outline" onclick="copyMD()">Copy</button>
+    </div>
+
+    <pre id="md" style="white-space:pre-wrap;margin-top:10px;">{{ resume_md }}</pre>
+  </div>
+
+  {% if tips %}
+    <div class="can-card can-pad" style="margin-top:16px;">
+      <h4 class="can-title" style="margin:0 0 8px;">Suggestions</h4>
+      <p>{{ tips.summary }}</p>
+      {% if tips.quick_wins %}
+        <div><b>Quick wins:</b>
+          <ul>
+            {% for x in tips.quick_wins %}<li>{{ x }}</li>{% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+      {% if tips.missing_sections %}
+        <div><b>Missing sections:</b> {{ tips.missing_sections|join:", " }}</div>
+      {% endif %}
+      {% if tips.project_improvements %}
+        <div style="margin-top:8px;"><b>Projects:</b>
+          <ul>{% for x in tips.project_improvements %}<li>{{ x }}</li>{% endfor %}</ul>
+        </div>
+      {% endif %}
+      {% if tips.portfolio_advice %}
+        <div style="margin-top:8px;"><b>Portfolio:</b> {{ tips.portfolio_advice }}</div>
+      {% endif %}
+      {% if tips.sample_achievement_bullets %}
+        <div style="margin-top:8px;"><b>Achievement bullets:</b>
+          <ul>{% for x in tips.sample_achievement_bullets %}<li>{{ x }}</li>{% endfor %}</ul>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+
+<script>
+function copyMD(){
+  const pre  = document.getElementById('md');
+  const txt  = pre ? pre.innerText : '';
+  const btn  = document.getElementById('btn-copy');
+  if (!txt) return;
+  navigator.clipboard.writeText(txt).then(()=>{
+    if (btn) { btn.textContent = 'Copied!'; setTimeout(()=>btn.textContent='Copy', 1000); }
+  }).catch(()=>{
+    // fallback
+    if (btn) { btn.textContent = 'Copy failed'; setTimeout(()=>btn.textContent='Copy', 1500); }
+  });
+}
+</script>
+{% endblock %}

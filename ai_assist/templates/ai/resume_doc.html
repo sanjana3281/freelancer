@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Resume</title>
+
+  <!-- Clean, ATS-friendly fonts (body = Inter, headings = Libre Baskerville) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    /* --- Page and print setup (removes big top gap) --- */
+    @page { margin: 14mm 16mm; }        /* Controls top white space on PDF */
+    html, body { margin: 0; padding: 0; }
+
+    /* --- Base --- */
+    :root{
+      --ink:#0f172a;     /* slate-900 */
+      --muted:#334155;   /* slate-700 */
+      --rule:#cbd5e1;    /* slate-300 */
+      --accent:#0f172a;
+    }
+    body{
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+      color:var(--ink);
+      font-size: 11pt;
+      line-height: 1.45;
+    }
+    .page{               /* No big padding at the top */
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    /* --- Header --- */
+    .header{ text-align:center; margin: 0 0 10px; }
+    .name{
+      font-family: "Libre Baskerville", Georgia, "Times New Roman", Times, serif;
+      font-size: 26pt;
+      font-weight: 700;
+      margin: 0;                       /* kills default H1 top margin */
+      letter-spacing: .3px;
+    }
+    .contact{
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 10.5pt;
+      display:flex; gap:8px; justify-content:center; flex-wrap:wrap;
+    }
+    .contact .sep{ color:#94a3b8; margin: 0 4px; }
+    .contact a{ color: var(--muted); text-decoration: none; border-bottom: 1px solid transparent; }
+    .contact a:hover{ color: var(--ink); border-bottom-color: currentColor; }
+
+    /* --- Sections --- */
+    .section{ margin-top: 14px; }
+    .h{
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-size: 11pt;
+      margin: 0 0 6px;
+      color: var(--accent);
+    }
+    .rule{ height:1px; background: var(--rule); margin: 6px 0 10px; }
+
+    .summary{ margin: 0; }
+
+    /* --- Lists --- */
+    ul.flat{ list-style: none; padding: 0; margin: 0; }
+    ul.bul{ padding-left: 16px; margin: 6px 0 0; }
+    ul.bul > li{ margin: 2px 0; }
+
+    /* --- Projects --- */
+    .proj{
+      break-inside: avoid;               /* prevents split across pages */
+      margin: 8px 0 10px;
+    }
+    .proj-head{
+      display:flex; justify-content:space-between; gap:12px; align-items:baseline;
+    }
+    .proj-title{ font-weight: 600; }
+    .proj-dates, .proj-meta{ color: var(--muted); font-size: 10.5pt; white-space: nowrap; }
+    .small{ font-size: 10.5pt; color: var(--muted); }
+    .links{ margin-top: 4px; }
+    .links a{ color: var(--muted); text-decoration: none; }
+    .links a:hover{ color: var(--ink); text-decoration: underline; }
+
+    /* --- Columns for skills/achievements if needed --- */
+    .cols{ display:grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; }
+    @media print {
+      .cols{ grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+    <button class="print-btn" onclick="window.print()">Download PDF</button>
+
+  <div class="page">
+
+    <!-- HEADER -->
+ <header class="header">
+  <h1 class="name">{{ d.name }}</h1>
+  <div class="contact">
+  {% if d.phone %}<span>{{ d.phone }}</span>{% endif %}
+  {% if d.phone and d.email %}<span class="sep">|</span>{% endif %}
+  {% if d.email %}<span><a href="mailto:{{ d.email }}">{{ d.email }}</a></span>{% endif %}
+
+  {# show a separator between contact and social if both sides exist #}
+  {% if d.phone or d.email %}
+    {% if linkedin or github %}<span class="sep">|</span>{% endif %}
+  {% endif %}
+
+  {% if github %}
+    <span><a href="{{ github }}" target="_blank" rel="noopener">GitHub</a></span>
+  {% endif %}
+  <!-- {% if linkedin %}
+    <span><a href="{{ linkedin }}" target="_blank" rel="noopener">LinkedIn</a></span>
+  {% endif %} -->
+</div>
+</header>
+
+    <!-- SUMMARY -->
+    {% if about %}
+      <section class="section">
+        <div class="h">Summary</div>
+        <div class="rule"></div>
+        <p class="summary">{{ about }}</p>
+      </section>
+    {% endif %}
+
+    <!-- SKILLS + ROLES side-by-side -->
+    
+
+    <!-- PROJECTS -->
+    {% if d.projects %}
+      <section class="section">
+        <div class="h">Projects</div>
+        <div class="rule"></div>
+
+        {% for p in d.projects %}
+          <div class="proj">
+            <div class="proj-head">
+              <div class="proj-title">
+                <b>{{ p.title }}</b>
+                {% if p.role_title %} — <span class="small">{{ p.role_title }}</span>{% endif %}
+              </div>
+              {% if p.start_date or p.end_date %}
+                <div class="proj-dates">
+                  {% if p.start_date %}{{ p.start_date }}{% endif %}
+                  {% if p.end_date %} — {{ p.end_date }}{% endif %}
+                </div>
+              {% endif %}
+            </div>
+
+            {% if p.description and not p.bullets %}
+              <p style="margin:4px 0 0;">{{ p.description }}</p>
+            {% endif %}
+
+            {% if p.bullets %}
+              <ul class="bul">
+                {% for b in p.bullets %}
+                  <li>{{ b }}</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+
+            <div class="links small">
+            {% if p.demo_url %}
+                <a href="{{ p.demo_url }}" target="_blank" rel="noopener">Demo</a>
+            {% endif %}
+
+            {# show a middle dot only if both sides exist #}
+            {% if p.demo_url %}
+                {% if p.github_url or p.repo_url %} · {% endif %}
+            {% endif %}
+
+            {% if p.github_url or p.repo_url %}
+                <a href="{{ p.github_url|default:p.repo_url }}" target="_blank" rel="noopener">Repository</a>
+            {% endif %}
+            </div>
+
+          </div>
+        {% endfor %}
+      </section>
+    {% endif %}
+
+    {% if d.skills or d.roles %}
+    <div class="h">Skills</div>
+    <div class="rule"></div>
+      <!-- <div class="cols"> -->
+        <div class="skills-full">
+        {% if d.skills %}
+        
+            <p class="summary skills-line">{{ d.skills|join:", " }}</p>
+        {% endif %}
+        </div>
+
+      <!-- </div> -->
+
+    {% endif %}
+
+    <!-- ACHIEVEMENTS / PUBLICATIONS if you add later -->
+    {% if d.achievements %}
+      <section class="section">
+        <div class="h">Achievements</div>
+        <div class="rule"></div>
+        <ul class="bul">
+          {% for a in d.achievements %}
+            <li>
+              <b>{{ a.title }}</b>{% if a.date %} — <span class="small">{{ a.date }}</span>{% endif %}
+              {% if a.description %}<div class="small">{{ a.description }}</div>{% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+
+  </div>
+</body>
+</html>

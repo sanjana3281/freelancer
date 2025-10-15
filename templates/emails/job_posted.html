@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+  <body style="font-family:system-ui,Arial,sans-serif">
+    <h2 style="margin:0 0 8px">New job posted: {{ job.title }}</h2>
+    <div style="color:#555;margin-bottom:10px">{{ company }}</div>
+
+    {% if job.location_city or job.location_country %}
+      <div><b>Location:</b> {{ job.location_city }} {{ job.location_country }}</div>
+    {% endif %}
+    <div><b>Type:</b> {{ job.get_job_type_display }} • {{ job.get_work_mode_display }}</div>
+
+    {% if job.description %}
+      <p style="margin-top:12px;color:#333">{{ job.description|truncatechars:220 }}</p>
+    {% endif %}
+
+    <p style="margin-top:16px">
+      <a href="{{ job_url_full }}" style="background:#111;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none">
+        View job & apply
+      </a>
+    </p>
+
+    <hr style="border:none;border-top:1px solid #eee;margin:20px 0">
+    <p style="font-size:12px;color:#777">
+      You’re receiving this because job email notifications are enabled in your profile.
+    </p>
+  </body>
+</html>

@@ -13,6 +13,8 @@
   </div>
 {% endif %}
 {% load static %}
+<script src="{% static 'js/add_option.js' %}?v=3"></script>
+
 
 <!doctype html>
 <html lang="en">
@@ -45,6 +47,43 @@ td{background:#0f1a2f;border:1px solid #213053;padding:6px 8px} tr td:first-chil
 .small{font-size:13px;color:var(--muted)}
 .add{font-weight:800;color:#7aa9ff;cursor:pointer}
 @media (max-width:900px){.grid{grid-template-columns:1fr}}
+.formset-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 10px 0 12px;
+}
+
+/* “Role” label on the left */
+.formset-title {
+  font-weight: 600;
+  color: var(--text, #cfe8ff);
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+/* both buttons on the right */
+.formset-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 20px; /* spacing between the two links */
+}
+
+/* link styling to match your existing +Add role look */
+.inline-add-link {
+  color: #4da3ff;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.inline-add-link:hover {
+  text-decoration: underline;
+  color: #66b6ff;
+}
+
+
 </style>
 </head>
 <body>
@@ -77,10 +116,30 @@ td{background:#0f1a2f;border:1px solid #213053;padding:6px 8px} tr td:first-chil
     <!-- ROLES -->
     <section class="card" id="roles">
     <div class="toolbar">
-        <div class="section-title">Roles</div>
-        <a class="add" data-add-row data-prefix="roles">+ Add role</a>
-    </div>
+        <!-- <div class="section-title">Roles</div>
+        <div class="formset-actions">
+    <a class="add" data-add-row data-prefix="roles">
+      + Add role
+    </a>
 
+    <a href="#"
+       class="inline-add-link add-option-btn"
+       data-target-class="role-select"
+       data-endpoint-url="{% url 'ajax_create_role' %}">
+      + Add new
+    </a>
+        
+    </div> -->
+    <div class="col-left section-title">Role</div>
+  <div class="col-right">
+    <div class="formset-actions">
+      <a  class="add" data-add-row data-prefix="roles" >+ Add Row</a>
+      <a href="#" class="inline-add-link add-option-btn"
+         data-target-class="role-select"
+         data-endpoint-url="{% url 'ajax_create_role' %}">+ Add Role</a>
+    </div>
+  </div>
+  </div>
     {{ role_fs.management_form }}
     {% if role_fs.non_form_errors %}<div class="err">{{ role_fs.non_form_errors }}</div>{% endif %}
     <table>
@@ -114,8 +173,33 @@ td{background:#0f1a2f;border:1px solid #213053;padding:6px 8px} tr td:first-chil
     <!-- SKILLS -->
     <section class="card" id="skills">
     <div class="toolbar">
-        <div class="section-title">Skills</div>
-        <a class="add" data-add-row data-prefix="skills">+ Add skill</a>
+        <!-- <div class="add" ><!--#style="display:flex; gap:8px; align-items:center;"
+            {{ form.skill }} <!-- has class skill-select 
+            <button type="button"
+                    class="add-option-btn"
+                    data-target-class="skill-select"
+                    data-endpoint-url="{% url 'ajax_create_skill' %}">
+            + Add New Skill
+            </button>
+        </div>
+                
+        <a class="add" data-add-row data-prefix="skills">+ Add Row</a>
+    </div> -->
+    <div class="col-left">Skill</div>
+  <div class="col-right">
+    <div class="formset-actions">
+      <a class="add" data-add-row data-prefix="skills">
+        + Add Row
+      </a>
+
+      <a href="#"
+         class="inline-add-link add-option-btn"
+         data-target-class="skill-select"
+         data-endpoint-url="{% url 'ajax_create_skill' %}">
+        + Add Skill
+      </a>
+    </div>
+  </div>
     </div>
 
     {{ skill_fs.management_form }}

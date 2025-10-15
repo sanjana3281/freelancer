@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  .notif-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 18px;
+    padding: 16px 18px;
+    display: grid;
+    grid-template-columns: 32px 1fr auto;
+    gap: 14px;
+    align-items: center;
+    transition: transform .08s ease, background .15s ease, border-color .15s ease;
+  }
+  .notif-card:hover { transform: translateY(-1px); background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.12); }
+  .notif-icon { width:32px;height:32px;border-radius:10px; display:flex;align-items:center;justify-content:center;
+                background: linear-gradient(135deg,#1fa2ff33,#12d8fa33);
+                border:1px solid rgba(255,255,255,.12); font-size:18px }
+  .notif-title { font-weight:700; font-size:18px; margin:0; color:#eaf4ff }
+  .notif-meta { color:#aab6c4; font-size:12px; margin-top:4px }
+  .btn-row { display:flex; gap:8px; }
+  .btn-ghost { padding:8px 12px; border:1px solid rgba(255,255,255,0.14); border-radius:10px;
+               color:#eaf4ff; text-decoration:none; font-weight:600; font-size:13px }
+  .btn-ghost:hover { border-color:#3ec8ff; box-shadow:0 0 0 2px #3ec8ff22 inset }
+  .btn-primary { padding:8px 12px; border-radius:10px; background:#3ec8ff; color:#00131f;
+                 text-decoration:none; font-weight:800; font-size:13px; border:0; }
+  .btn-primary:hover { filter:brightness(1.06) }
+  .dot-new { width:8px;height:8px;border-radius:999px;background:#36fba1; display:inline-block; margin-right:8px; }
+  .header-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+</style>
+
+<div class="can-wrap">
+  <div class="header-row">
+    <h1 class="can-title">Notifications</h1>
+    <div class="btn-row">
+      <a class="btn-ghost" href="{% url 'jobs_list' %}">Browse all jobs</a>
+      <a class="btn-ghost" href="{% url 'notifications_mark_all_read' %}">Mark all as read</a>
+    </div>
+  </div>
+
+  {% if notifications %}
+    <div class="can-row">
+      {% for n in notifications %}
+        <div class="notif-card">
+          <div class="notif-icon">💼</div>
+
+          <div>
+            <div class="notif-title">
+              {% if not n.is_read %}<span class="dot-new"></span>{% endif %}
+              {{ n.message }}
+            </div>
+            <div class="notif-meta">Posted {{ n.created_at|timesince }} ago</div>
+          </div>
+
+          <div class="btn-row">
+            <a class="btn-primary" href="{% url 'notification_open' n.id %}">View job</a>
+            <a class="btn-ghost" href="{% url 'jobs_list' %}">Jobs list</a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="can-card can-pad">No notifications yet.</div>
+  {% endif %}
+</div>
+{% endblock %}
+

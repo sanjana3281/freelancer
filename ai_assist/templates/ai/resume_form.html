@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Build Resume{% endblock %}
+{% block content %}
+<div class="container container-narrow mt-4">
+
+  <div class="can-card can-pad-lg" style="margin-bottom:14px;">
+    <div class="can-title" style="margin:0 0 6px;">Resume builder</div>
+    <div class="can-muted">Fill or adjust details. We prefilled from your profile.</div>
+  </div>
+
+  <form method="post" class="can-card can-pad-lg">
+    {% csrf_token %}
+
+    <div class="can-grid-2" style="gap:14px;">
+      <div>
+        <label class="can-label">Full name</label>
+        {{ form.name }}
+      </div>
+      <div>
+        <label class="can-label">Headline</label>
+        {{ form.headline }}
+      </div>
+
+      <div class="can-grid-1" style="grid-column:1/-1;">
+        <label class="can-label">Summary</label>
+        {{ form.summary }}
+      </div>
+
+      <div>
+        <label class="can-label">Email</label>
+        {{ form.email }}
+      </div>
+      <div>
+        <label class="can-label">Phone</label>
+        {{ form.phone }}
+      </div>
+      <div>
+        <label class="can-label">City</label>
+        {{ form.city }}
+      </div>
+      <div>
+        <label class="can-label">Country</label>
+        {{ form.country }}
+      </div>
+
+      <div class="can-grid-1" style="grid-column:1/-1;">
+        <label class="can-label">Top skills (comma-separated)</label>
+        {{ form.skills }}
+      </div>
+      <div class="can-grid-1" style="grid-column:1/-1;">
+        <label class="can-label">Target roles (comma-separated)</label>
+        {{ form.roles }}
+      </div>
+    </div>
+
+    <hr class="can-hr" style="margin:18px 0;">
+
+    <div class="can-title" style="font-size:16px;margin-bottom:10px;">Projects</div>
+
+    <div class="can-grid-2" style="gap:14px;">
+      <div>
+        <label class="can-label">Project 1 title</label>
+        {{ form.p1_title }}
+      </div>
+      <div>
+        <label class="can-label">Your role</label>
+        {{ form.p1_role }}
+      </div>
+      <div class="can-grid-1" style="grid-column:1/-1;">
+        <label class="can-label">Description / bullets (one per line)</label>
+        {{ form.p1_desc }}
+      </div>
+      <div>
+        <label class="can-label">Start</label>
+        {{ form.p1_start }}
+      </div>
+      <div>
+        <label class="can-label">End</label>
+        {{ form.p1_end }}
+      </div>
+      <div>
+        <label class="can-label">Demo URL</label>
+        {{ form.p1_demo }}
+      </div>
+      <div>
+        <label class="can-label">Repo URL</label>
+        {{ form.p1_repo }}
+      </div>
+    </div>
+
+    <div class="can-muted" style="margin:12px 0 4px;">Optional second project</div>
+
+    <div class="can-grid-2" style="gap:14px;">
+      <div>
+        <label class="can-label">Project 2 title</label>
+        {{ form.p2_title }}
+      </div>
+      <div>
+        <label class="can-label">Your role</label>
+        {{ form.p2_role }}
+      </div>
+      <div class="can-grid-1" style="grid-column:1/-1;">
+        <label class="can-label">Description / bullets (one per line)</label>
+        {{ form.p2_desc }}
+      </div>
+      <div>
+        <label class="can-label">Start</label>
+        {{ form.p2_start }}
+      </div>
+      <div>
+        <label class="can-label">End</label>
+        {{ form.p2_end }}
+      </div>
+      <div>
+        <label class="can-label">Demo URL</label>
+        {{ form.p2_demo }}
+      </div>
+      <div>
+        <label class="can-label">Repo URL</label>
+        {{ form.p2_repo }}
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+      <a class="can-btn-outline" href="{% url 'freelancer_dashboard' %}">Cancel</a>
+      <button type="submit" class="can-btn">Generate resume</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

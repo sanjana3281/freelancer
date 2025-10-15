@@ -13,6 +13,8 @@ from .forms import (
     RoleFormSet, SkillFormSet, LanguageFormSet,
     AchievementFormSet, PublicationFormSet, ProjectFormSet,RecruiterProfileForm,ApplicationForm
 )
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from datetime import datetime
 from django.db.models import Prefetch
@@ -22,8 +24,10 @@ from django.http import JsonResponse
 from .models import (
     Freelancer, FreelancerProfile,
     FreelancerProject, Achievement, Publication,
-    Application
+    Application,Role, Skill,Notification,
 )
+from django import forms
+from .models import Review
 def whoami(request):
     return JsonResponse({
         "session_key": request.session.session_key,
@@ -680,3 +684,165 @@ def freelancer_dashboard(request):
         "my_apps": my_apps,
     }
     return render(request, "freelancer_dashboard.html", context)
+
+
+
+
+#
+
+@recruiter_required
+def flow_recruiter_request_completion(request, app_id):
+    recruiter = Recruiter.objects.get(id=request.session["recruiter_id"])
+    rp = getattr(recruiter, "profile", None)
+    app = get_object_or_404(Application.objects.select_related("job", "freelancer"), id=app_id, job__recruiter=rp)
+    flow, _ = ApplicationFlow.objects.get_or_create(application=app)
+
+    if flow.stage != "HIRED":
+        messages.error(request, "You can request completion only after hiring.")
+        return redirect("job_applications", job_id=app.job.id)
+
+    flow.request_completion()
+    flow.save()
+    messages.success(request, "Asked the freelancer to confirm completion.")
+    return redirect("job_applications", job_id=app.job.id)
+
+
+@freelancer_required
+def flow_freelancer_confirm_completion(request, app_id):
+    fp = FreelancerProfile.objects.get(freelancer_id=request.session["freelancer_id"])
+    app = get_object_or_404(Application.objects.select_related("flow", "job__recruiter"), id=app_id, freelancer=fp)
+    flow = getattr(app, "flow", None)
+
+    if not flow or flow.stage != "COMPLETION_REQUESTED":
+        messages.error(request, "No completion request pending.")
+        return redirect("freelancer_dashboard")
+
+    if request.method == "POST":
+        flow.confirm_completion()
+        flow.save()
+        messages.success(request, "Marked completed. Thanks!")
+        return redirect("freelancer_dashboard")
+
+    return render(request, "jobs/confirm_completion.html", {"app": app, "flow": flow})
+
+
+# --- Review (recruiter -> freelancer) ---
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ["rating", "comment"]
+
+@recruiter_required
+def flow_recruiter_review(request, app_id):
+    recruiter = Recruiter.objects.get(id=request.session["recruiter_id"])
+    rp = getattr(recruiter, "profile", None)
+    app = get_object_or_404(Application.objects.select_related("job", "freelancer", "flow"), id=app_id, job__recruiter=rp)
+    flow = app.flow
+
+    if not flow or flow.stage != "COMPLETED":
+        messages.error(request, "You can review only after freelancer confirms completion.")
+        return redirect("job_applications", job_id=app.job.id)
+
+    if hasattr(app, "review_from_recruiter"):
+        messages.info(request, "You already left a review.")
+        return redirect("job_applications", job_id=app.job.id)
+
+    if request.method == "POST":
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            r = form.save(commit=False)
+            r.application = app
+            r.reviewer = recruiter
+            r.reviewee = app.freelancer  # FK to Freelancer on Application
+            r.save()
+            messages.success(request, "Review submitted.")
+            return redirect("job_applications", job_id=app.job.id)
+    else:
+        form = ReviewForm()
+
+    return render(request, "jobs/review_form.html", {"form": form, "app": app})
+
+
+
+
+#add job and skill
+
+
+@login_required
+@require_POST
+def ajax_create_role(request):
+    name = (request.POST.get("name") or "").strip()
+    if not name:
+        return JsonResponse({"error": "Missing name"}, status=400)
+
+    existing = Role.objects.filter(name__iexact=name).first()
+    if existing:
+        # 409 = Conflict (duplicate)
+        return JsonResponse(
+            {"error": "Already exists", "id": existing.id, "name": existing.name},
+            status=409
+        )
+
+    obj = Role.objects.create(name=name)
+    return JsonResponse({"id": obj.id, "name": obj.name}, status=201)
+
+
+@login_required
+@require_POST
+def ajax_create_skill(request):
+    name = (request.POST.get("name") or "").strip()
+    if not name:
+        return JsonResponse({"error": "Missing name"}, status=400)
+
+    existing = Skill.objects.filter(name__iexact=name).first()
+    if existing:
+        return JsonResponse(
+            {"error": "Already exists", "id": existing.id, "name": existing.name},
+            status=409
+        )
+
+    obj = Skill.objects.create(name=name)
+    return JsonResponse({"id": obj.id, "name": obj.name}, status=201)
+
+
+
+#for email and notification 
+def notifications_list(request):
+    fid = request.session.get("freelancer_id")
+    fr = get_object_or_404(Freelancer, id=fid)
+    notifications = fr.notifications.all().order_by("-created_at")
+    return render(request, "notifications/list.html", {"notifications": notifications})
+
+def notification_open(request, pk):
+    fid = request.session.get("freelancer_id")
+    fr = get_object_or_404(Freelancer, id=fid)
+    n = get_object_or_404(Notification, id=pk, freelancer=fr)
+    if not n.is_read:
+        n.is_read = True
+        n.save(update_fields=["is_read"])
+    # fallback to jobs list if url missing
+    return redirect(n.url or "jobs_list")
+
+def notification_mark_read(request, pk):
+    fid = request.session.get("freelancer_id")
+    fr = get_object_or_404(Freelancer, id=fid)
+    n = get_object_or_404(Notification, pk=pk, freelancer=fr)
+    n.is_read = True
+    n.save(update_fields=["is_read"])
+    return redirect(n.url or "notifications_list")
+
+
+def toggle_job_email_notifications(request):
+    fid = request.session.get("freelancer_id")
+    f = get_object_or_404(Freelancer, id=fid)
+    f.profile.email_notifications = not f.profile.email_notifications
+    f.profile.save(update_fields=["email_notifications"])
+    return redirect(request.GET.get("next") or "freelancer_profile_edit")
+
+
+def notifications_mark_all_read(request):
+    fid = request.session.get("freelancer_id")
+    fr = get_object_or_404(Freelancer, id=fid)
+    from .models import Notification
+    Notification.objects.filter(freelancer=fr, is_read=False).update(is_read=True)
+    return redirect("notifications_list")

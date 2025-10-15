@@ -52,6 +52,13 @@ urlpatterns = [
     path("flow/schedule/<int:app_id>/", views.flow_recruiter_schedule_interview, name="flow_recruiter_schedule_interview"),
     path("flow/outcome/<int:app_id>/<str:decision>/", views.flow_recruiter_set_outcome, name="flow_recruiter_set_outcome"),
 
+    #for email and notifications
+    path("notifications/", views.notifications_list, name="notifications_list"),
+    path("notifications/<int:pk>/read/", views.notification_mark_read, name="notification_mark_read"),
+    path("settings/job-email-toggle/", views.toggle_job_email_notifications, name="toggle_job_email_notifications"),
+    path("notifications/mark-all-read/", views.notifications_mark_all_read, name="notifications_mark_all_read"),
+    path("notifications/<int:pk>/open/", views.notification_open, name="notification_open"),
+
 ]
 
 

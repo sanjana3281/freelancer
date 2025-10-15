@@ -32,11 +32,26 @@
       <div class="d-flex gap-3">
        {% if request.session.role == "freelancer" %}
             <a class="nav-link text-light" href="{% url 'freelancer_dashboard' %}">My Profile</a>
-            <a class="nav-link text-light" href="{% url 'jobs_list' %}">Jobs</a>   
+            <a class="nav-link text-light" href="{% url 'jobs_list' %}">Jobs</a> 
+            <a href="{% url 'notifications_list' %}" class="nav-item">
+              🔔
+              {% if nav_is_freelancer and nav_unread_count %}
+                <span class="badge">{{ nav_unread_count }}</span>
+              {% endif %}
+            </a>
+
+            <a href="{% url 'logout' %}" class="nav-link text-light">
+                <i class="fa fa-sign-out"></i> Logout
+            </a>
+
+
         {% elif request.session.role == "recruiter" %}
             <a class="nav-link text-light" href="{% url 'recruiter_profile_detail' %}">Profile</a>
             <a class="nav-link text-light" href="{% url 'my_jobs' %}">My Jobs</a>  
             <a class="nav-link text-light" href="{% url 'job_create' %}">Post Job</a>
+            <a href="{% url 'logout' %}" class="nav-link text-light">
+                <i class="fa fa-sign-out"></i> Logout
+            </a>
         {% endif %}
 
       </div>

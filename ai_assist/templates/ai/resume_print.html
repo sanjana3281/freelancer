@@ -1,0 +1,232 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{ d.name|default:"Resume" }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    /* ---------- PRINT SETUP ---------- */
+    @page { size: A4; margin: 14mm; }
+    @media print {
+      .no-print { display:none !important; }
+      body { background: #fff; }
+      .page { box-shadow:none; margin:0; }
+    }
+
+    /* ---------- PAGE ---------- */
+    :root{
+      --ink:#0b1220;
+      --muted:#4b5563;
+      --rule:#d9dde3;
+      --accent:#1e293b;
+    }
+    html,body{ height:100%; }
+    body{
+      margin:0; background:#0b1320;  /* looks nice on screen */
+      font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, "Helvetica Neue", Arial, system-ui, sans-serif;
+      color:#0b0f18;
+    }
+    .page{
+      background:#fff;
+      color:var(--ink);
+      max-width: 800px;   /* ~A4 @ ~96dpi */
+      margin: 20px auto;
+      padding: 28px 32px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+      border-radius: 10px;
+    }
+
+    /* ---------- HEADER ---------- */
+    .hdr{
+      text-align:center; margin-bottom:14px;
+    }
+    .name{
+      font-size: 28px; font-weight: 800; letter-spacing:.4px; margin:0;
+    }
+    .meta{
+      margin-top:6px; color:var(--muted); font-size:13px;
+      display:flex; gap:12px; justify-content:center; flex-wrap:wrap;
+    }
+    .meta a{ color:var(--muted); text-decoration:none; border-bottom:1px dotted #c9ced6; }
+    .rule{ height:1px; background:var(--rule); margin:14px 0 12px; }
+
+    /* ---------- SECTION HEAD ---------- */
+    .h-sec{
+      font-size:12px; letter-spacing:.12em; text-transform:uppercase;
+      font-weight:800; color:var(--accent);
+      border-bottom:2px solid var(--rule);
+      padding-bottom:6px; margin:20px 0 10px;
+    }
+
+    /* ---------- SUMMARY ---------- */
+    .summary{ color:#1f2937; }
+
+    /* ---------- PROJECTS ---------- */
+    .project{ margin: 12px 0 10px; }
+    .prow{ display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+    .ptitle{
+      font-weight:700; font-size:15px;
+    }
+    .pdates{ font-size:12px; color:var(--muted); white-space:nowrap; }
+    .prole{ color:var(--muted); font-size:13px; margin-top:2px; }
+    .plist{ margin:6px 0 0 16px; padding:0; }
+    .plist li{ margin:2px 0; }
+
+    /* ---------- ACHIEVEMENTS / PUBS ---------- */
+    .flat ul{ margin:6px 0 0 16px; }
+    .flat li{ margin:2px 0; }
+    .muted{ color:var(--muted); }
+
+    /* ---------- SKILLS ---------- */
+    .chips{ display:flex; gap:6px; flex-wrap:wrap; }
+    .chip{
+      font-size:12px; padding:4px 8px; border:1px solid var(--rule); border-radius:999px;
+      background:#fafafa;
+    }
+
+    /* button for screen */
+    .toolbar{
+      display:flex; justify-content:flex-end; margin-bottom:10px;
+    }
+    .btn{
+      appearance:none; border:1px solid #cbd5e1; background:#f8fafc; color:#0b1220;
+      padding:8px 10px; border-radius:8px; cursor:pointer; font-weight:600; font-size:13px;
+    }
+    .btn:active{ transform:translateY(1px); }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- Screen-only print button -->
+  <div class="toolbar no-print">
+    <button class="btn" onclick="window.print()">Print / Save as PDF</button>
+  </div>
+
+  <!-- Header -->
+  <header class="hdr">
+    <h1 class="name">{{ d.name|default:"Your Name" }}</h1>
+    <div class="meta">
+      {% if d.phone %}<span>{{ d.phone }}</span>{% endif %}
+      {% if d.email %}<span><a href="mailto:{{ d.email }}">{{ d.email }}</a></span>{% endif %}
+      {% if d.links.linkedin %}<span><a href="{{ d.links.linkedin }}" target="_blank">LinkedIn</a></span>{% endif %}
+      {% if d.links.github %}<span><a href="{{ d.links.github }}" target="_blank">GitHub</a></span>{% endif %}
+      {% if d.links.portfolio %}<span><a href="{{ d.links.portfolio }}" target="_blank">Portfolio</a></span>{% endif %}
+    </div>
+  </header>
+
+  <div class="rule"></div>
+
+  <!-- Summary -->
+  {% if d.bio or d.headline %}
+  <section>
+    <div class="h-sec">Summary</div>
+    <div class="summary">
+      {% if d.headline %}<p style="margin:0 0 6px;"><b>{{ d.headline }}</b></p>{% endif %}
+      {% if d.bio %}<p style="margin:0;">{{ d.bio }}</p>{% endif %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Projects -->
+  {% if p.bullets %}
+  <ul class="plist">
+    {% for b in p.bullets %}
+      <li>{{ b }}</li>
+    {% endfor %}
+  </ul>
+{% elif p.description %}
+  <p style="margin:6px 0 0;">{{ p.description }}</p>
+{% endif %}
+
+        {% if p.role_title %}<div class="prole">Role: {{ p.role_title }}</div>{% endif %}
+
+        {% if p.description %}
+          {# turn long description into short bullets by splitting on '.' #}
+          {% with p.description|cut:"\r"|linebreaksbr as desc %}
+          <ul class="plist">
+            {% for bullet in p.description|truncatechars:800|cut:"\r"|cut:"\n"|cut:"• "|cut:"- "|slice:":1" %}
+            {% endfor %}
+          </ul>
+          {% endwith %}
+          <p style="margin:6px 0 0;">{{ p.description }}</p>
+        {% endif %}
+
+        {% if p.demo_url or p.github_url %}
+          <div class="muted" style="margin-top:4px;">
+            {% if p.demo_url %}<a href="{{ p.demo_url }}" target="_blank">Live demo</a>{% endif %}
+            {% if p.demo_url and p.github_url %} · {% endif %}
+            {% if p.github_url %}<a href="{{ p.github_url }}" target="_blank">Repository</a>{% endif %}
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  <!-- Achievements -->
+  {% if d.achievements %}
+  <section>
+    <div class="h-sec">Achievements</div>
+    <div class="flat">
+      <ul>
+        {% for a in d.achievements %}
+          <li>
+            <b>{{ a.title }}</b>
+            {% if a.date %}<span class="muted"> — {{ a.date }}</span>{% endif %}
+            {% if a.description %}<div class="muted">{{ a.description }}</div>{% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Publications (if you store them separately, add/rename accordingly) -->
+  {% if d.publications %}
+  <section>
+    <div class="h-sec">Publications</div>
+    <div class="flat">
+      <ul>
+        {% for pub in d.publications %}
+          <li>
+            <b>{{ pub.title }}</b>
+            {% if pub.date %}<span class="muted"> — {{ pub.date }}</span>{% endif %}
+            {% if pub.link %}<div><a href="{{ pub.link }}" target="_blank">{{ pub.link }}</a></div>{% endif %}
+            {% if pub.description %}<div class="muted">{{ pub.description }}</div>{% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Skills -->
+  {% if d.skills or d.roles %}
+  <section>
+    <div class="h-sec">Skills</div>
+    {% if d.roles %}
+      <div class="muted" style="margin-bottom:6px;">Roles</div>
+      <div class="chips" style="margin-bottom:10px;">
+        {% for r in d.roles %}
+          <span class="chip">{{ r }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% if d.skills %}
+      <div class="muted" style="margin-bottom:6px;">Top Skills</div>
+      <div class="chips">
+        {% for s in d.skills %}
+          <span class="chip">{{ s }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </section>
+  {% endif %}
+
+</div>
+</body>
+</html>

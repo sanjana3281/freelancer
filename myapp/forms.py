@@ -277,3 +277,19 @@ class ApplicationForm(forms.ModelForm):
         }
 
 
+class FreelancerRoleForm(forms.ModelForm):
+    class Meta:
+        model = FreelancerRole
+        fields = ["role"]
+        widgets = {
+            "role": forms.Select(attrs={"class": "role-select"}),
+        }
+
+class FreelancerSkillForm(forms.ModelForm):
+    class Meta:
+        model = FreelancerSkill
+        fields = ["skill", "level", "years"]
+        widgets = {
+            "skill": forms.Select(attrs={"class": "skill-select"}),
+        }
+

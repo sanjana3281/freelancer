@@ -19,23 +19,48 @@ from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
 from django.conf.urls.static import static
+from myapp import views as my_views
  
+
+# urlpatterns = [
+#     path("admin/", admin.site.urls),
+
+#     # FRONTEND (includes /freelancer/dashboard/ and /freelancer/profile/edit/)
+#     path("", include("myapp.urls")),
+#     path("", include(("myapp.urls", "portal"), namespace="portal")),
+
+#     # Optional landing pages rendered directly by the project urlconf:
+#     path("", TemplateView.as_view(template_name="choose_role.html"), name="home"),
+#     path("register/", TemplateView.as_view(template_name="register.html"), name="register"),
+#     path("login/", TemplateView.as_view(template_name="login.html"), name="login"),
+
+#     # API (include ONCE)
+#     path("api/", include("myapp.api.urls")),
+# ]
+
+# if settings.DEBUG:
+#     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# project/urls.py
+# from django.conf import settings
+# from django.contrib import admin
+# from django.urls import path, include
+# from django.conf.urls.static import static
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-
-    # FRONTEND (includes /freelancer/dashboard/ and /freelancer/profile/edit/)
     path("", include("myapp.urls")),
-
-    # Optional landing pages rendered directly by the project urlconf:
+    path("api/", include("myapp.api.urls")),
     path("", TemplateView.as_view(template_name="choose_role.html"), name="home"),
     path("register/", TemplateView.as_view(template_name="register.html"), name="register"),
     path("login/", TemplateView.as_view(template_name="login.html"), name="login"),
-    path("", include(("myapp.urls", "portal"), namespace="portal")),
+    #add skill and role
+    path("ajax/roles/create/", my_views.ajax_create_role, name="ajax_create_role"),
+    path("ajax/skills/create/", my_views.ajax_create_skill, name="ajax_create_skill"),
 
-    # API (include ONCE)
-    path("api/", include("myapp.api.urls")),
+# project/urls.py
+    path("ai/", include(("ai_assist.urls", "ai"), namespace="ai"))
 ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
