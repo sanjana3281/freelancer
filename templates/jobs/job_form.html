@@ -100,6 +100,20 @@
     <!-- SKILLS (FORMSET) -->
     <section class="jx-card">
       <h3 class="jx-card-title">Skills</h3>
+       <div class="col-right">
+    <div class="formset-actions">
+      <a class="add" data-add-row data-prefix="skills">
+        + Add Row
+      </a>
+
+      <a href="#"
+         class="inline-add-link add-option-btn"
+         data-target-class="skill-select"
+         data-endpoint-url="{% url 'ajax_create_skill' %}">
+        + Add Skill
+      </a>
+    </div>
+  </div>
       <p class="jx-hint">Mark at least one skill as <b>Must-have</b>.</p>
 
       {{ formset.management_form }}
@@ -132,6 +146,7 @@
     </div>
   </form>
 </div>
+
 {% endblock %}
 
 

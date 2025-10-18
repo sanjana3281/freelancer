@@ -309,20 +309,23 @@
   </div>
   <div id="ai-output" class="can-card can-pad" style="margin-top:12px; display:none;"></div>
 </section>
-
+<!-- 
 <a class="can-btn" href="{% url 'ai:resume_chat' %}"
    style="background:linear-gradient(135deg,#34d399,#22d3ee);color:#001016;">
   💬 Chat with AI Resume Coach
 </a>
-<!-- 
+
 <form id="resume-upload-form" enctype="multipart/form-data">
   {% csrf_token %}
   <input type="file" name="resume" id="resume-input" accept=".pdf,.docx,.txt">
   <button type="button" id="btn-upload-analyze" class="can-btn">Analyze My Resume</button>
-</form> -->
+</form>
 
-<!-- <div id="ai-upload-output" class="can-card can-pad" style="display:none;"></div> -->
+<div id="ai-upload-output" class="can-card can-pad" style="display:none;"></div> -->
 
+<a class="can-btn-outline" href="{% url 'resume_ai:suggest' %}">
+  Analyze my resume (AI)
+</a>
 
 
   </main>

@@ -1,0 +1,93 @@
+{% load static %}
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Suggested Changes</title>
+  <link rel="stylesheet" href="{% static 'resume_ai/resume.css' %}">
+
+  <link rel="stylesheet" href="{% static 'resume_ai/resume.css' %}">
+</head>
+<body class="ra-page">
+  <div class="ra-wrap">
+
+<header class="ra-hero">
+  <h1 class="ra-title">Suggested Changes</h1>
+  <p class="ra-sub">Actionable edits, rewrites, and keywords to improve ATS matches.</p>
+
+  <!-- NEW: left/right actions bar -->
+  <div class="ra-topbar">
+    <div class="ra-actions-left">
+      <a class="ra-btn ra-btn-primary" href="{% url 'resume_ai:suggest' %}">
+        Analyze another
+      </a>
+    </div>
+  </div>
+</header>
+
+
+    <div class="ra-grid">
+
+      <!-- Left column: Suggestions & Missing -->
+      <div class="ra-card">
+        {% if result.missing_sections %}
+          <div class="ra-h2">⚠️ Missing Sections</div>
+          <ul class="ra-list">
+            {% for s in result.missing_sections %}<li>{{ s }}</li>{% endfor %}
+          </ul>
+          <div class="ra-spacer"></div>
+        {% endif %}
+
+        {% if result.suggestions %}
+          <div class="ra-h2">💡 Improvements</div>
+          <ul class="ra-list">
+            {% for tip in result.suggestions %}<li>{{ tip }}</li>{% endfor %}
+          </ul>
+        {% else %}
+          <div class="ra-muted">No suggestions returned.</div>
+        {% endif %}
+      </div>
+
+      <!-- Right column: Keywords & Links -->
+      <div class="ra-card">
+        {% if result.keywords_to_add %}
+          <div class="ra-h2">🔑 Keywords to Weave In</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
+            {% for k in result.keywords_to_add %}
+              <span class="ra-chip">{{ k }}</span>
+            {% endfor %}
+          </div>
+          <div class="ra-spacer"></div>
+        {% endif %}
+
+        {% if result.links_to_add %}
+          <div class="ra-h2">🔗 Links to Add</div>
+          <ul class="ra-list">
+            {% for l in result.links_to_add %}<li>{{ l }}</li>{% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Rewrites full width -->
+    {% if result.rewrites %}
+      <div class="ra-section-gap"></div>
+      <div class="ra-card">
+        <div class="ra-h2">✍️ Drop-in Rewrites</div>
+        {% for r in result.rewrites %}
+          <div class="ra-rewrite">
+            <div style="font-weight:700;">{{ r.section }}</div>
+            {% if r.before %}
+              <div class="before-label">Your current</div>
+              <pre class="ra-pre warn">{{ r.before }}</pre>
+            {% endif %}
+            <div class="before-label">Suggested</div>
+            <pre class="ra-pre ok">{{ r.suggested_rewrite }}</pre>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+  </div>
+</body>
+</html>

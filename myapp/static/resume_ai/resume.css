@@ -1,0 +1,301 @@
+/* ==================== THEME — Glass + Neon Accent (clean + aligned) ==================== */
+:root{
+  --bg:#081020; --glass:rgba(13,20,40,.6); --stroke:rgba(100,130,200,.20);
+  --text:#eaf2ff; --muted:#8aa0c2;
+  --g1:#22d3ee; --g2:#60a5fa; --g3:#a78bfa;
+  --ok:#21c77a; --warn:#f59e0b;
+  --r:22px;
+}
+
+/* Page */
+.ra-page{
+  min-height:100dvh; color:var(--text);
+  background:
+    radial-gradient(900px 400px at 80% -10%, rgba(96,165,250,.18), transparent 60%),
+    radial-gradient(600px 400px at 0% 30%, rgba(34,211,238,.15), transparent 60%),
+    #081020;
+  padding:60px 20px 80px;           /* more breathing room top/bottom */
+}
+.ra-wrap{ max-width:1040px; margin-inline:auto; }
+
+/* ==================== HEADERS ==================== */
+.ra-hero{ margin-bottom: 28px; }
+.ra-title{ font-size:clamp(28px,4vw,40px); font-weight:900; line-height:1.1; }
+.ra-sub{ color:var(--muted); margin:6px 0 0; }
+
+/* Subtitle (left) + Button (right) row on RESULTS */
+.ra-subbar{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:16px; margin-top:12px; margin-bottom: 18px;   /* gap above first card */
+  flex-wrap:wrap;
+}
+.ra-subbar .ra-sub{ margin:0; flex:1; }
+
+/* ==================== CARDS / GRID ==================== */
+.ra-card{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)),
+    var(--glass);
+  border:1px solid var(--stroke);
+  border-radius:var(--r);
+  backdrop-filter: blur(8px);
+  padding:22px;
+  box-shadow: 0 18px 40px rgba(3,10,27,.35);
+}
+.ra-card + .ra-card{ margin-top: 20px; }
+
+.ra-grid{ display:grid; gap:24px; grid-template-columns:1fr; }
+@media(min-width:960px){ .ra-grid{ grid-template-columns:1.1fr .9fr; } }
+
+.ra-h2{ font-weight:900; margin:12px 0 8px; }
+.ra-list{ padding-left:18px; }
+.ra-list li{ margin:9px 0; }
+
+/* Chips */
+.ra-chips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.ra-chip{
+  background:rgba(10,18,36,.7);
+  border:1px solid var(--stroke);
+  border-radius:999px; padding:6px 10px;
+}
+
+/* Rewrites */
+.ra-rewrite{
+  margin-top:12px; padding:14px;
+  border-radius:16px; border:1px solid var(--stroke);
+  background:rgba(10,18,36,.75);
+}
+.ra-label{ color:#8aa0c2; font-size:12px; margin:8px 0 4px; }
+.ra-pre{
+  white-space:pre-wrap; background:rgba(8,16,32,.7);
+  border:1px solid var(--stroke); border-radius:12px; padding:12px;
+}
+
+/* ==================== BUTTONS ==================== */
+.ra-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  height:46px; padding:0 18px; border-radius:999px;
+  font-weight:800; text-decoration:none; border:1px solid transparent;
+  transition: transform .06s ease, filter .18s ease;
+}
+.ra-btn:active{ transform: translateY(1px) scale(.995); }
+
+.ra-btn-primary{
+  color:#06101f;
+  background-image: linear-gradient(135deg,var(--g1),var(--g2) 60%,var(--g3));
+  box-shadow: 0 10px 22px rgba(96,165,250,.25);
+}
+.ra-btn-primary:hover{ filter:brightness(1.05); }
+
+.ra-btn-ghost{
+  color:#dbe8ff; background:transparent; border-color:var(--stroke);
+}
+.ra-btn-ghost:hover{ background:rgba(15,26,48,.6); }
+
+/* ==================== UPLOAD PAGE ==================== */
+.ra-file{ display:flex; flex-direction:column; gap:22px; margin-top:24px; }
+
+/* custom file input */
+.ra-filebox{
+  position:relative; display:flex; align-items:center; gap:10px;
+  height:48px; padding:0 14px; border-radius:14px;
+  background:rgba(8,16,32,.6); border:1px solid var(--stroke); color:var(--text);
+}
+.ra-filebox input[type="file"]{ position:absolute; inset:0; opacity:0; cursor:pointer; }
+.ra-filebox .label{
+  font-weight:700; padding:6px 10px; border-radius:10px;
+  background:#0d1b33; border:1px solid var(--stroke);
+}
+.ra-filebox .filename{ color:#cfe1ff; opacity:.9; }
+
+/* Upload: buttons aligned RIGHT (Reset + Get Suggestions) */
+/* Buttons aligned fully to the right side */
+.ra-action-bar {
+  display: flex;
+  justify-content: flex-end;   /* align both buttons right */
+  align-items: center;
+  gap: 14px;                   /* space between Reset and Get Suggestions */
+  margin-top: 24px;            /* extra breathing room */
+  margin-right: 4px;           /* subtle offset to look centered visually */
+}
+
+/* Make the buttons a bit more premium-looking */
+.ra-btn-primary,
+.ra-btn-ghost {
+  min-width: 150px;
+  height: 46px;
+  font-weight: 700;
+  border-radius: 999px;
+  text-align: center;
+}
+
+.ra-btn-primary {
+  background-image: linear-gradient(135deg, var(--g1), var(--g2) 60%, var(--g3));
+  color: white;
+  box-shadow: 0 8px 20px rgba(96,165,250,0.25);
+}
+
+.ra-btn-ghost {
+  background: transparent;
+  border: 1px solid var(--stroke);
+  color: var(--text);
+  transition: background 0.2s;
+}
+
+.ra-btn-ghost:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+/* Mobile view — stack buttons neatly */
+@media (max-width: 640px) {
+  .ra-action-bar {
+    flex-direction: column-reverse;
+    align-items: flex-end;
+    gap: 10px;
+  }
+}
+
+
+/* Helper tip card */
+.ra-tip{
+  background:#0c172c; color:#cfe0ff;
+  border:1px solid var(--stroke); border-radius:16px;
+  padding:12px 14px; font-size:14px; margin-top:14px;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width:700px){
+  .ra-subbar{ flex-direction:column; align-items:flex-start; gap:12px; }
+  .ra-btn-primary{ align-self:flex-end; }
+}
+@media (max-width:600px){
+  .ra-action-bar{ flex-direction:column-reverse; justify-content:center; gap:10px; }
+}
+
+
+/* ---------------- Upload Page Polish ---------------- */
+
+.ra-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.ra-form {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  margin-top: 28px;
+}
+
+.ra-upload-card {
+  background: var(--glass);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r);
+  backdrop-filter: blur(8px);
+  padding: 30px 26px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+}
+
+.ra-filebox {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(8, 16, 32, 0.6);
+  border: 1px solid var(--stroke);
+  border-radius: 14px;
+  height: 48px;
+  padding: 0 14px;
+  position: relative;
+}
+
+.ra-filebox input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.ra-filebox .label {
+  background: #0d1b33;
+  padding: 7px 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  border: 1px solid var(--stroke);
+}
+
+.ra-filebox .filename {
+  color: #cfe1ff;
+  opacity: 0.9;
+  flex: 1;
+  font-size: 15px;
+}
+
+.ra-action-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.ra-btn-primary {
+  min-width: 180px;
+  height: 48px;
+  font-size: 15px;
+  background-image: linear-gradient(135deg, var(--g1), var(--g2) 60%, var(--g3));
+  border-radius: 999px;
+  font-weight: 700;
+  color: white;
+  border: none;
+  box-shadow: 0 10px 20px rgba(96,165,250,0.25);
+  transition: 0.2s ease;
+}
+
+.ra-btn-primary:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.ra-btn-ghost {
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--stroke);
+  transition: 0.2s ease;
+}
+
+.ra-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ra-meta {
+  font-size: 14px;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 12px;
+}
+
+.ra-tip {
+  font-size: 15px;
+  background: rgba(12, 23, 44, 0.8);
+  border: 1px solid var(--stroke);
+  border-radius: 16px;
+  padding: 14px 16px;
+  color: var(--text);
+  line-height: 1.6;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .ra-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .ra-action-bar {
+    justify-content: flex-end;
+  }
+}
+

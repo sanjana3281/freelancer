@@ -56,9 +56,12 @@ urlpatterns = [
     #add skill and role
     path("ajax/roles/create/", my_views.ajax_create_role, name="ajax_create_role"),
     path("ajax/skills/create/", my_views.ajax_create_skill, name="ajax_create_skill"),
+    #resume analyses
 
 # project/urls.py
-    path("ai/", include(("ai_assist.urls", "ai"), namespace="ai"))
+    path("ai/", include(("ai_assist.urls", "ai"), namespace="ai")),
+    path("resume/", include("resume_ai.urls")),
+
 ]
 
 if settings.DEBUG:

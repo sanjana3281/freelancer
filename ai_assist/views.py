@@ -494,21 +494,21 @@ def ai_resume_preview(request):
 
 
 
-# def ai_resume_download_md(request):
-#     """Optional: direct .md download of the current data."""
-#     data = request.session.get("ai_resume_data")
-#     if not data:
-#         fp = _profile_from_session(request)
-#         if not fp:
-#             return HttpResponse("Not logged in", status=400)
-#         data = _serialize_profile(fp)
+def ai_resume_download_md(request):
+    """Optional: direct .md download of the current data."""
+    data = request.session.get("ai_resume_data")
+    if not data:
+        fp = _profile_from_session(request)
+        if not fp:
+            return HttpResponse("Not logged in", status=400)
+        data = _serialize_profile(fp)
 
-#     # basic markdown using your fallback to avoid API calls
-#     md = _fallback_md(data)
-#     filename = f"resume_{slugify(data.get('name') or 'freelancer')}.md"
-#     resp = HttpResponse(md, content_type="text/markdown; charset=utf-8")
-#     resp["Content-Disposition"] = f'attachment; filename="{filename}"'
-#     return resp
+    # basic markdown using your fallback to avoid API calls
+    md = _fallback_md(data)
+    filename = f"resume_{slugify(data.get('name') or 'freelancer')}.md"
+    resp = HttpResponse(md, content_type="text/markdown; charset=utf-8")
+    resp["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return resp
 
 
 

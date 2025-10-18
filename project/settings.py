@@ -17,8 +17,7 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 
 load_dotenv()
@@ -49,6 +48,8 @@ INSTALLED_APPS = [
     'rest_framework',
     # 'myapp',
     "ai_assist",
+    "resume_ai",          # ← add this line
+
 ]
 
 MIDDLEWARE = [
@@ -95,6 +96,18 @@ DATABASES = {
     }
 }
 
+# ===============================
+# EMAIL CONFIGURATION (for sending job emails)
+# ===============================
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "freelanceplatform.notifications@gmail.com"  # your sender Gmail
+EMAIL_HOST_PASSWORD = "afer szvq vtfz sdrs"  # see Step 2 below
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+SITE_BASE_URL = "http://127.0.0.1:8000"  # change to your deployed URL later
 
 
 

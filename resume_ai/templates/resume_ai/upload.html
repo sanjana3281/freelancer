@@ -1,0 +1,87 @@
+<!-- {% load static %}
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Resume → AI Suggestions</title>
+  <link rel="stylesheet" href="{% static 'resume_ai/resume.css' %}">
+
+</head>
+<body class="ra-page">
+  <div class="ra-wrap">
+
+    <div class="ra-head">
+      <div>
+        <div class="ra-title">Resume Analyzer</div>
+        <div class="ra-sub">Upload your PDF/DOCX and get concrete, ATS-safe suggestions.</div>
+      </div>
+    <div class="ra-action-bar">
+        <a class="ra-btn ra-btn-ghost" href="{% url 'resume_ai:suggest' %}">Reset</a>
+    </div>
+
+    </div>
+
+    <div class="ra-card">
+      <form action="{% url 'resume_ai:suggest' %}" method="post" enctype="multipart/form-data" class="ra-file">
+        {% csrf_token %}
+        <input class="ra-input" type="file" name="resume" accept=".pdf,.docx" required>
+        <button class="ra-btn ra-btn-primary" type="submit">Get Suggestions</button>
+        <span class="ra-chip">PDF / DOCX · &lt; 5MB</span>
+      </form>
+    </div>
+
+    <div class="ra-section-gap"></div>
+
+    <div class="ra-card ra-toast">
+      Tip: Results work best if your resume includes projects/links. You can try
+      a sample from the Google Docs template gallery or any test DOCX/PDF.
+    </div>
+
+  </div>
+</body>
+</html>
+
+ -->
+{% load static %}
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Resume → AI Suggestions</title>
+  <link rel="stylesheet" href="{% static 'resume_ai/resume.css' %}">
+
+</head>
+<body class="ra-page">
+    <div class="ra-hero">
+    <div class="ra-head">
+        <h1 class="ra-title">Resume Analyzer</h1>
+        <a class="ra-btn ra-btn-ghost" href="{% url 'resume_ai:suggest' %}">Reset</a>
+    </div>
+    <p class="ra-sub">Upload your PDF/DOCX and get concrete, ATS-safe suggestions.</p>
+    </div>
+
+    <form action="{% url 'resume_ai:suggest' %}" method="post" enctype="multipart/form-data" class="ra-form">
+    {% csrf_token %}
+    
+    <div class="ra-upload-card">
+        <div class="ra-filebox">
+        <span class="label">Choose File</span>
+        <span class="filename">no file selected</span>
+        <input type="file" name="resume" accept=".pdf,.docx" required
+                onchange="this.previousElementSibling.textContent = this.files?.[0]?.name || 'no file selected'">
+        </div>
+
+        <div class="ra-action-bar">
+        <button class="ra-btn ra-btn-primary" type="submit">Get Suggestions</button>
+        </div>
+
+        <p class="ra-meta">PDF / DOCX · &lt; 5MB</p>
+    </div>
+
+    <div class="ra-tip">
+        💡 <b>Tip:</b> Results work best if your resume includes <b>Projects</b> and at least one <b>GitHub/Portfolio</b> link.
+    </div>
+    </form>
+</body>
+</html>
+

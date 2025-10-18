@@ -846,3 +846,7 @@ def notifications_mark_all_read(request):
     from .models import Notification
     Notification.objects.filter(freelancer=fr, is_read=False).update(is_read=True)
     return redirect("notifications_list")
+
+
+
+#fliter
