@@ -6,6 +6,10 @@
     <h2 class="can-title">Applications — {{ job.title }}</h2>
     <a href="{% url 'my_jobs' %}" class="can-btn-outline">← Back to My Jobs</a>
   </div>
+ 
+
+  
+
 
   {% if applications %}
     <div style="display:flex;flex-direction:column;gap:16px;">
@@ -17,6 +21,11 @@
               <div style="font-weight:700;">
                 {{ app.freelancer.full_name|default:app.freelancer.freelancer.name }}
               </div>
+              {% if app.most_recommended %}
+                <div class="can-chip" style="margin-top:6px;background:rgba(255,215,0,.12);color:#ffd700;font-weight:800;">
+                  🏅 Most Recommended
+                </div>
+              {% endif %}
               <div class="can-muted" style="font-size:13px;">
                 Applied {{ app.created_at|date:"d M, H:i" }}
                 {% if app.freelancer.city or app.freelancer.country %}

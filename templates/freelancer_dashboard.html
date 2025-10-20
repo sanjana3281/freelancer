@@ -73,6 +73,26 @@
 
   <!-- Main -->
   <main class="main">
+    {% if has_badge %}
+    <div class="can-card can-pad" style="text-align:center;background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.3);border-radius:12px;margin-bottom:16px;">
+      <h3 style="color:#ffd700;margin:0;">🏅 Most Recommended Freelancer</h3>
+      <p style="color:#fff;margin-top:4px;">
+        You’ve received <b>{{ five_star_reviews }}</b> five-star reviews — clients love your work!
+      </p>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+      setTimeout(() => {
+        confetti({
+          particleCount: 150,
+          spread: 80,
+          origin: { y: 0.6 },
+          colors: ['#FFD700', '#FFF5BA', '#FFE066']
+        });
+      }, 500);
+    </script>
+    {% endif %}
+
     {#Invitations & Status #}
 {% if my_apps %}
   {% for app in my_apps %}

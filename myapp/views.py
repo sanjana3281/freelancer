@@ -493,17 +493,49 @@ def job_apply_view(request, job_id):
 
 
 #for recuiter
+# @recruiter_required
+# def job_applications_view(request, job_id):
+#     r = Recruiter.objects.get(id=request.session["recruiter_id"])
+#     rp = r.profile
+#     job = get_object_or_404(Job, id=job_id, recruiter=rp)
+#     apps = (Application.objects
+#               .filter(job=job)
+#               .select_related("freelancer__freelancer"))
+#     return render(request, "jobs/job_applications.html", {
+#         "job": job,
+#         "applications": apps,   # <-- name matches template
+#     })
+from django.db.models import Count, Q, F, Value, Case, When, BooleanField
+
 @recruiter_required
 def job_applications_view(request, job_id):
     r = Recruiter.objects.get(id=request.session["recruiter_id"])
     rp = r.profile
     job = get_object_or_404(Job, id=job_id, recruiter=rp)
-    apps = (Application.objects
-              .filter(job=job)
-              .select_related("freelancer__freelancer"))
+
+    applications = (
+        Application.objects
+        .filter(job=job)
+        .select_related("freelancer", "freelancer__freelancer", "flow")
+        .annotate(
+            total_reviews=Count("freelancer__reviews_received", distinct=True),
+            five_star=Count(
+                "freelancer__reviews_received",
+                filter=Q(freelancer__reviews_received__rating=5),
+                distinct=True
+            ),
+            most_recommended=Case(
+                When(total_reviews__gte=5, five_star=F("total_reviews"), then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField(),
+            ),
+        )
+        .order_by("-created_at")
+    )
+
     return render(request, "jobs/job_applications.html", {
         "job": job,
-        "applications": apps,   # <-- name matches template
+        "applications": applications,  # name matches your template
     })
 
 
@@ -526,6 +558,9 @@ def job_application_detail_view(request, app_id):
 
 
 
+from django.shortcuts import get_object_or_404, render
+from .models import Recruiter, RecruiterProfile, Job, FreelancerProfile, FreelancerReview
+
 @recruiter_required
 def recruiter_view_freelancer_profile(request, profile_id):
     recruiter = Recruiter.objects.get(id=request.session["recruiter_id"])
@@ -537,7 +572,20 @@ def recruiter_view_freelancer_profile(request, profile_id):
     if job_id:
         job = get_object_or_404(Job, id=job_id, recruiter=rp)
 
-    return render(request, "jobs/recruiter_view_freelancer_profile.html", {"fp": fp, "job": job})
+    # NEW: all reviews for this freelancer
+    reviews = (
+        FreelancerReview.objects
+        .filter(freelancer=fp)
+        .select_related("recruiter", "contract", "contract__application", "contract__application__job")
+        .order_by("-created_at")
+    )
+
+    return render(
+        request,
+        "jobs/recruiter_view_freelancer_profile.html",
+        {"fp": fp, "job": job, "reviews": reviews},
+    )
+
 
 
 
@@ -609,7 +657,7 @@ from django.contrib import messages
 from django.http import HttpResponseNotAllowed
 from django.db import transaction
 from .models import Application, ApplicationFlow, Contract, RecruiterProfile
-@recruiter_required
+
 # def flow_recruiter_set_outcome(request, app_id, decision):
 #     recruiter = Recruiter.objects.get(id=request.session["recruiter_id"])
 #     rp = getattr(recruiter, "profile", None)
@@ -721,11 +769,49 @@ def flow_freelancer_respond(request, app_id, decision):
 
 
 
+# @freelancer_required
+# def freelancer_dashboard(request):
+#     fid = request.session.get("freelancer_id")
+#     freelancer = get_object_or_404(Freelancer, id=fid)
+
+#     profile, _ = FreelancerProfile.objects.get_or_create(freelancer=freelancer)
+
+#     fp = (
+#         FreelancerProfile.objects
+#         .filter(pk=profile.pk)
+#         .select_related("freelancer")
+#         .prefetch_related(
+#             # change names here if you set related_name on your FKs
+#             Prefetch("freelancerproject_set", queryset=FreelancerProject.objects.order_by("-id")),
+#             Prefetch("achievement_set", queryset=Achievement.objects.order_by("-id")),
+#             Prefetch("publication_set", queryset=Publication.objects.order_by("-id")),
+#         )
+#         .first()
+#     )
+
+#     my_apps = (
+#         Application.objects
+#         .filter(freelancer=fp)
+#         .select_related("job", "job__recruiter", "flow")   
+#         .order_by("-created_at")
+#     )
+
+#     context = {
+#         "freelancer": freelancer,
+#         "profile": fp,  
+#         "projects": list(fp.freelancerproject_set.all()),
+#         "achievements": list(fp.achievement_set.all()),
+#         "publications": list(fp.publication_set.all()),
+#         "my_apps": my_apps,
+#     }
+#     return render(request, "freelancer_dashboard.html", context)
+from django.contrib import messages
+from django.db.models import Count, Q
+
 @freelancer_required
 def freelancer_dashboard(request):
     fid = request.session.get("freelancer_id")
     freelancer = get_object_or_404(Freelancer, id=fid)
-
     profile, _ = FreelancerProfile.objects.get_or_create(freelancer=freelancer)
 
     fp = (
@@ -733,7 +819,6 @@ def freelancer_dashboard(request):
         .filter(pk=profile.pk)
         .select_related("freelancer")
         .prefetch_related(
-            # change names here if you set related_name on your FKs
             Prefetch("freelancerproject_set", queryset=FreelancerProject.objects.order_by("-id")),
             Prefetch("achievement_set", queryset=Achievement.objects.order_by("-id")),
             Prefetch("publication_set", queryset=Publication.objects.order_by("-id")),
@@ -744,17 +829,34 @@ def freelancer_dashboard(request):
     my_apps = (
         Application.objects
         .filter(freelancer=fp)
-        .select_related("job", "job__recruiter", "flow")   
+        .select_related("job", "job__recruiter", "flow")
         .order_by("-created_at")
     )
 
+    # 🏅 Badge check
+    total_reviews = fp.reviews_received.count()
+    five_star_reviews = fp.reviews_received.filter(rating=5).count()
+    has_badge = total_reviews >= 5 and five_star_reviews == total_reviews
+    display_name = getattr(fp, "full_name", None) or getattr(fp.freelancer, "name", None) or "there"
+
+    # 🎉 Congratulate only once per session
+    if has_badge and not request.session.get("badge_congrats_shown"):
+        messages.success(
+            request,
+            f"🎉 Congratulations {display_name}! "
+            "You’ve earned the 🏅 Most Recommended badge for receiving five 5-star reviews!"
+        )
+        request.session["badge_congrats_shown"] = True
+
     context = {
         "freelancer": freelancer,
-        "profile": fp,  
+        "profile": fp,
         "projects": list(fp.freelancerproject_set.all()),
         "achievements": list(fp.achievement_set.all()),
         "publications": list(fp.publication_set.all()),
         "my_apps": my_apps,
+        "has_badge": has_badge,
+        "five_star_reviews": five_star_reviews,
     }
     return render(request, "freelancer_dashboard.html", context)
 

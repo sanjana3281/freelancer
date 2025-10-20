@@ -205,8 +205,73 @@
         {% endif %}
         {% endwith %}
       </section>
+      <!-- ===== Reviews ===== -->
+      {% if reviews %}
+        <div class="can-card can-pad" id="reviews-section">
+          <div class="can-title" style="font-size:20px;margin-bottom:10px;">⭐ Reviews</div>
+          <div class="stack">
+            {% for r in reviews %}
+              <div style="border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:12px;">
+                <!-- Header: recruiter avatar + name + rating -->
+                <div style="display:flex;align-items:center;gap:10px;">
+                  {% comment %}
+                    Try common image fields on RecruiterProfile. Adjust if yours differ.
+                    We attempt: r.recruiter.avatar, r.recruiter.logo, r.recruiter.photo
+                  {% endcomment %}
+                  {% if r.recruiter.avatar %}
+                    <img src="{{ r.recruiter.avatar.url }}" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid var(--border);">
+                  {% elif r.recruiter.logo %}
+                    <img src="{{ r.recruiter.logo.url }}" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid var(--border);background:#fff;">
+                  {% elif r.recruiter.photo %}
+                    <img src="{{ r.recruiter.photo.url }}" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid var(--border);">
+                  {% else %}
+                    <div style="width:36px;height:36px;border-radius:50%;background:var(--chip);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;">🏢</div>
+                  {% endif %}
+
+                  <div style="flex:1;min-width:0;">
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                      <div style="font-weight:800;">
+                        {# Prefer company name; fall back to linked user name if available #}
+                        {% firstof r.recruiter.company_name r.recruiter.user.get_full_name r.recruiter.user.username "Recruiter" %}
+                      </div>
+                      {% if r.contract and r.contract.application and r.contract.application.job %}
+                        <span class="can-muted" style="font-weight:600;">• {{ r.contract.application.job.title }}</span>
+                      {% endif %}
+                    </div>
+                    <div class="can-muted" style="font-size:12px;">{{ r.created_at|date:"d M Y, H:i" }}</div>
+                  </div>
+
+                  <div style="margin-left:auto;color:var(--accent);font-weight:800;white-space:nowrap;">
+                    {{ r.rating }}★
+                  </div>
+                </div>
+
+                {% if r.review_text %}
+                  <p class="can-muted" style="margin-top:8px;">{{ r.review_text }}</p>
+                {% endif %}
+
+                {% if r.contract %}
+                  {% if r.contract.is_completed %}
+                    <span class="can-chip">✅ Completed on {{ r.contract.completed_at|date:"d M, Y" }}</span>
+                  {% else %}
+                    <span class="can-chip">⏳ In progress</span>
+                  {% endif %}
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% else %}
+        <div class="can-card can-pad">
+          <div class="can-muted">No reviews yet.</div>
+        </div>
+      {% endif %}
+
 
     </div>
+    <!-- ===== Reviews ===== -->
+    
+ 
 
     <!-- ===== RIGHT: Quick Facts ===== -->
     <div class="stack" style="position:sticky;top:16px;">

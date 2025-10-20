@@ -6,6 +6,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 from datetime import timedelta
 from django.db import models
+from django.db.models import Count, Q
 
 class Freelancer(models.Model):
     name = models.CharField(max_length=200)
@@ -66,7 +67,17 @@ class FreelancerProfile(models.Model):
     profile_photo = models.ImageField(upload_to="freelancer_photos/", blank=True, null=True)
     rating_avg = models.DecimalField(max_digits=3, decimal_places=2, null=True, blank=True)
     rating_count = models.PositiveIntegerField(default=0)
-
+    @property
+    def is_most_recommended(self):
+        """
+        Returns True if freelancer has 5 or more reviews and
+        ALL of them are 5-star.
+        """
+        stats = self.reviews_received.aggregate(
+            total=Count("id"),
+            five_star=Count("id", filter=Q(rating=5))
+        )
+        return stats["total"] >= 5 and stats["five_star"] == stats["total"]
 
 
     def __str__(self):
