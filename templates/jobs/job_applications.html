@@ -64,22 +64,47 @@
 
               {% elif flow.stage == "INTERVIEW" %}
                 <span class="can-badge">Interview: {{ flow.interview_at|date:"d M, H:i" }}</span>
-                <a class="can-chip" href="{% url 'flow_recruiter_set_outcome' app.id 'hire' %}">Hire</a>
-                <a class="can-chip" href="{% url 'flow_recruiter_set_outcome' app.id 'reject' %}">Reject</a>
+
+                {# ---- POST buttons for outcome (matches the safe view we wrote) ---- #}
+                <form method="post" action="{% url 'flow_recruiter_set_outcome' app.id 'hire' %}" style="display:inline;">
+                  {% csrf_token %}
+                  <button type="submit" class="can-chip">Hire</button>
+                </form>
+                <form method="post" action="{% url 'flow_recruiter_set_outcome' app.id 'reject' %}" style="display:inline;">
+                  {% csrf_token %}
+                  <button type="submit" class="can-chip">Reject</button>
+                </form>
 
               {% elif flow.stage == "HIRED" %}
                 <span class="can-badge">Hired</span>
 
+                {# ---- Recruiter-side: Add/Edit review when eligible ---- #}
+                {% if app.contract and app.contract.review %}
+                  <div class="can-muted">Reviewed: {{ app.contract.review.rating }}★</div>
+                  <a class="can-btn-outline" href="{% url 'application_review_edit' app.id %}">Edit review</a>
+                {% else %}
+                  <a class="can-btn" href="{% url 'application_review_create' app.id %}">Add review</a>
+                {% endif %}
+
+                {# (Optional) show completion chip to recruiter too #}
+                {% if app.contract %}
+                  {% if app.contract.is_completed %}
+                    <span class="can-chip">✅ Completed on {{ app.contract.completed_at|date:"d M, Y" }}</span>
+                  {% else %}
+                    <span class="can-chip">⏳ In progress</span>
+                  {% endif %}
+                {% endif %}
+
               {% elif flow.stage == "REJECTED" %}
                 <span class="can-badge">Rejected</span>
               {% endif %}
-
             {% else %}
               <a class="can-btn" href="{% url 'flow_recruiter_shortlist' app.id %}">
                 ⭐ Shortlist
               </a>
             {% endif %}
           {% endwith %}
+
 
           {% if app.cover_letter %}
             <div class="can-muted" style="font-size:13px;line-height:1.6;">
@@ -94,3 +119,4 @@
   {% endif %}
 </div>
 {% endblock %}
+

@@ -43,7 +43,9 @@ urlpatterns = [
          views.flow_recruiter_schedule_interview, name="flow_recruiter_schedule_interview"),
     path("recruiter/applications/<int:app_id>/outcome/<str:decision>/",
          views.flow_recruiter_set_outcome, name="flow_recruiter_set_outcome"),  # decision = hire|reject
-
+     #review and communication
+     path("recruiter/applications/<int:app_id>/review/new/",  views.application_review_create, name="application_review_create"),
+     path("recruiter/applications/<int:app_id>/review/edit/", views.application_review_edit,   name="application_review_edit"),
     # Freelancer
     path("freelancer/applications/<int:app_id>/respond/<str:decision>/",
          views.flow_freelancer_respond, name="flow_freelancer_respond"),  # decision = accept|decline
@@ -59,6 +61,8 @@ urlpatterns = [
     path("notifications/mark-all-read/", views.notifications_mark_all_read, name="notifications_mark_all_read"),
     path("notifications/<int:pk>/open/", views.notification_open, name="notification_open"),
 
+     # for fliters
+    path("freelancer/jobs/", views.jobs_list_view, name="job_list"),  # <- use jobs_list_view
 
 ]
 

@@ -73,7 +73,7 @@
 
   <!-- Main -->
   <main class="main">
-    <!-- {#Invitations & Status #}
+    {#Invitations & Status #}
 {% if my_apps %}
   {% for app in my_apps %}
     {% with flow=app.flow %}
@@ -114,8 +114,22 @@
             <div class="can-title" style="font-size:18px;margin:0 0 6px;">
               Outcome: {{ flow.stage|title }} — {{ app.job.title }}
             </div>
+
+            {# >>> Add here: read-only contract badges for freelancers <<< #}
+            {% if flow.stage == "HIRED" and app.contract %}
+              {% if app.contract.is_completed %}
+                <div class="can-chip">✅ Marked completed on {{ app.contract.completed_at|date:"d M, Y" }}</div>
+              {% else %}
+                <div class="can-chip">⏳ In progress</div>
+              {% endif %}
+              {% if app.contract.review %}
+                <div class="can-chip">★ {{ app.contract.review.rating }} — “{{ app.contract.review.review_text|truncatechars:80 }}”</div>
+              {% endif %}
+            {% endif %}
+
             <a class="can-chip" href="{% url 'job_detail' app.job.id %}">View job →</a>
           </section>
+
 
         {% elif flow.stage == "SHORTLISTED_DECLINED" %}
           <section class="can-card can-pad-lg" style="margin-top:16px">
@@ -130,7 +144,7 @@
       {% endif %}
     {% endwith %}
   {% endfor %}
-{% endif %} -->
+{% endif %}
 
     <!-- About -->
     <section class="can-card can-pad-lg">

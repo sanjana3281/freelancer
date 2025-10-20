@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container container-narrow mt-4">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <h2 class="can-title">{{ is_edit|yesno:"Edit Review,Add Review" }} — {{ application.freelancer.full_name|default:application.freelancer.freelancer.name }}</h2>
+    <a href="{% url 'job_application_detail' application.id %}" class="can-btn-outline">← Back</a>
+</div>
+
+  <form method="post" class="can-card can-pad" style="display:flex;flex-direction:column;gap:16px;">
+    {% csrf_token %}
+
+    <div>
+      <label class="can-label">Rating</label>
+      <input type="hidden" name="rating" id="ratingInput" value="{{ form.rating.value|default:0 }}">
+      <div class="star-wrap" style="display:inline-flex;gap:8px;font-size:28px;cursor:pointer;">
+        <span class="star" data-v="1">☆</span><span class="star" data-v="2">☆</span>
+        <span class="star" data-v="3">☆</span><span class="star" data-v="4">☆</span>
+        <span class="star" data-v="5">☆</span>
+      </div>
+      {% if form.errors.rating %}<div class="can-error">{{ form.errors.rating }}</div>{% endif %}
+    </div>
+
+    <div>
+      <label for="{{ form.review_text.id_for_label }}" class="can-label">Written review</label>
+      {{ form.review_text }}
+    </div>
+
+    <div class="can-row" style="display:flex;gap:12px;align-items:flex-start;">
+      <label class="can-checkbox">{{ form.is_completed }} Freelancer completed the job</label>
+      <div style="flex:1">
+        <label for="{{ form.completion_notes.id_for_label }}" class="can-label">Completion notes</label>
+        {{ form.completion_notes }}
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button type="submit" class="can-btn">{{ is_edit|yesno:"Save changes,Submit review" }}</button>
+    </div>
+  </form>
+</div>
+
+<script>
+(function(){
+  const stars = document.querySelectorAll('.star-wrap .star');
+  const input = document.getElementById('ratingInput');
+  function paint(v){ stars.forEach(s => s.textContent = (+s.dataset.v <= +v) ? '★' : '☆'); }
+  stars.forEach(s => {
+    s.addEventListener('click', ()=>{ input.value = s.dataset.v; paint(input.value); });
+    s.addEventListener('mouseenter', ()=> paint(s.dataset.v));
+  });
+  document.querySelector('.star-wrap').addEventListener('mouseleave', ()=> paint(input.value || 0));
+  paint(input.value || 0);
+})();
+</script>
+{% endblock %}

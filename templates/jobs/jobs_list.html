@@ -1,53 +1,209 @@
 {% extends "base.html" %}
-
+{# project/templates/jobs/jobs_list.html #}
+{% load querytools %}
 {% block content %}
-<div class="can-wrap">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
-    <h1 class="can-title">Browse Jobs</h1>
-    <form method="get" style="min-width:280px;">
-      <input class="can-input" type="text" name="q" value="{{ request.GET.q }}" placeholder="Search roles, skills, location…">
+
+<div class="ra-page" style="padding:24px;">
+  <!-- Top bar: search, sort, reset, active chips -->
+  <div class="can-card can-pad" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px;">
+     <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+      <input class="can-input" type="text" name="q" value="{{ request.GET.q }}" placeholder="Search roles, skills, companies…" style="min-width:260px;">
+      <select class="can-select" name="sort">
+        <option value="new" {% if request.GET.sort == "new" or not request.GET.sort %}selected{% endif %}>Newest</option>
+        <option value="budget_desc" {% if request.GET.sort == "budget_desc" %}selected{% endif %}>Salary (High→Low)</option>
+        <option value="salary_low" {% if request.GET.sort == "salary_low" %}selected{% endif %}>Salary (Low→High)</option>
+        <option value="closing" {% if request.GET.sort == "closing" %}selected{% endif %}>Closing soon</option>
+      </select>
+      <button class="can-btn">Apply</button>
+      {% if request.GET %}
+        <a class="can-btn-outline" href="{% url 'job_list' %}">Reset all</a>
+      {% endif %}
     </form>
+
+    {% if request.GET %}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-left:auto;">
+        {% for k,vlist in request.GET.lists %}
+          {% for val in vlist %}
+            {% if val %}
+              <a class="can-chip" href="?{% qs_without k val %}" title="Remove">{{ k }}: {{ val }} ✕</a>
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+      </div>
+    {% endif %}
   </div>
 
-  <div class="can-row">
-    {% for job in jobs %}
-      <a href="{% url 'job_detail' job.id %}" style="text-decoration:none;color:inherit;">
-        <div class="can-card can-pad">
-          <div style="display:flex;gap:14px;align-items:center;margin-bottom:8px;">
-            {% if job.recruiter.logo %}
-              <img src="{{ job.recruiter.logo.url }}" alt="" style="width:42px;height:42px;border-radius:10px;object-fit:cover;border:1px solid var(--border);">
-            {% else %}
-              <div style="width:42px;height:42px;border-radius:10px;background:var(--chip);border:1px solid var(--border);"></div>
-            {% endif %}
-            <div>
-              <div style="font-weight:700;font-size:18px;">{{ job.title }}</div>
-              <div class="can-muted" style="font-size:13px;">
-                {{ job.recruiter.recruiter.company_name }} · {{ job.location_city }} {{ job.location_country }}
+  <div style="display:grid;grid-template-columns:280px 1fr;gap:18px;">
+    <!-- LEFT SIDEBAR (click-to-filter) -->
+    <form id="filters" method="get" class="can-card can-pad" style="display:flex;flex-direction:column;gap:14px;position:sticky;top:16px;height:max-content;">
+
+      <!-- Workplace -->
+      <details class="can-acc" open>
+        <summary>Workplace</summary>
+        <div class="can-acc-body">
+          {% for key,label in WORK_MODES %}
+            <label class="can-check" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+              <span><input type="radio" name="remote" value="{{ key }}" {% if request.GET.remote == key %}checked{% endif %}> {{ label }}</span>
+              <em class="can-muted">{{ facet.workplace|get_item:key }}</em>
+            </label>
+          {% endfor %}
+          <a href="?{% qs_without 'remote' %}" class="can-link can-muted" style="font-size:12px;">Clear</a>
+        </div>
+      </details>
+
+      <!-- Job type -->
+      <details class="can-acc" open>
+        <summary>Job type</summary>
+        <div class="can-acc-body">
+          {% for key,label in JOB_TYPES %}
+            <label class="can-check" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+              <span><input type="radio" name="job_type" value="{{ key }}" {% if request.GET.job_type == key %}checked{% endif %}> {{ label }}</span>
+              <em class="can-muted">{{ facet.jobtype|get_item:key }}</em>
+            </label>
+          {% endfor %}
+          <a href="?{% qs_without 'job_type' %}" class="can-link can-muted" style="font-size:12px;">Clear</a>
+        </div>
+      </details>
+
+      <!-- Role (from title keywords) -->
+      <details class="can-acc" open>
+        <summary>Role</summary>
+        <div class="can-acc-body">
+          {% for key,label in ROLE_LABELS %}
+            <label class="can-check" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+              <span><input type="radio" name="role" value="{{ key }}" {% if request.GET.role == key %}checked{% endif %}> {{ label }}</span>
+              <em class="can-muted">{{ facet.role|get_item:key }}</em>
+            </label>
+          {% endfor %}
+          <a href="?{% qs_without 'role' %}" class="can-link can-muted" style="font-size:12px;">Clear</a>
+        </div>
+      </details>
+
+      <!-- Publication date -->
+      <details class="can-acc" open>
+        <summary>Publication date</summary>
+        <div class="can-acc-body">
+          {% for key,label in POSTED_OPTS %}
+            <label><input type="radio" name="posted" value="{{ key }}" {% if request.GET.posted == key %}checked{% endif %}> {{ label }}</label>
+          {% endfor %}
+          <a href="?{% qs_without 'posted' %}" class="can-link can-muted" style="font-size:12px;">Clear</a>
+        </div>
+      </details>
+
+      <!-- Skills (multi) -->
+      <details class="can-acc">
+        <summary>Skills</summary>
+        <div class="can-acc-body" style="display:flex;flex-wrap:wrap;gap:8px;">
+          {% comment %}
+          Replace the list below with your dynamic popular skills if you have them.
+          {% endcomment %}
+          {% for s in POPULAR_SKILLS %}
+            <label class="can-chip">
+              <input type="checkbox" name="skills" value="{{ s }}" {% if s in selected_skills %}checked{% endif %}>
+              {{ s }}
+            </label>
+          {% endfor %}
+
+          <input type="text" name="skill_custom" placeholder="Add custom skill"
+                class="can-input" style="width:100%;margin-top:6px;">
+        </div>
+      </details>
+
+      <!-- Experience (string field; simple min/max text match) -->
+      <details class="can-acc">
+        <summary>Experience</summary>
+        <div class="can-acc-body" style="display:flex;gap:8px;">
+          <input type="text" name="exp_min" value="{{ request.GET.exp_min }}" placeholder="e.g. 1 or 0-2" class="can-input" style="width:120px;">
+          <input type="text" name="exp_max" value="{{ request.GET.exp_max }}" placeholder="e.g. 3 or 3-5" class="can-input" style="width:120px;">
+        </div>
+      </details>
+
+      <!-- Salary -->
+      <details class="can-acc">
+        <summary>Salary</summary>
+        <div class="can-acc-body" style="display:flex;gap:8px;flex-wrap:wrap;">
+          <input type="number" name="budget_min" value="{{ request.GET.budget_min }}" placeholder="Min" class="can-input" style="width:110px;">
+          <input type="number" name="budget_max" value="{{ request.GET.budget_max }}" placeholder="Max" class="can-input" style="width:110px;">
+          <select name="currency" class="can-select">
+            <option value="">Currency</option>
+            {% for c in CURRENCIES %}
+              <option value="{{ c }}" {% if request.GET.currency == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </details>
+
+      <!-- Location -->
+      <!-- <details class="can-acc">
+        <summary>Location</summary>
+        <div class="can-acc-body" style="display:flex;gap:8px;flex-wrap:wrap;">
+          <input type="text" name="city" value="{{ request.GET.city }}" placeholder="City" class="can-input" style="width:120px;">
+          <input type="text" name="country" value="{{ request.GET.country }}" placeholder="Country" class="can-input" style="width:120px;">
+        </div>
+      </details> -->
+
+      <button class="can-btn">Apply filters</button>
+    </form>
+
+    <!-- RIGHT: Results (your original card style) -->
+    <div class="can-wrap" style="padding:0;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+        <h1 class="can-title" style="margin:0;">Browse Jobs</h1>
+        <form method="get" style="min-width:280px;">
+          <input class="can-input" type="text" name="q" value="{{ request.GET.q }}" placeholder="Search roles, skills, location…">
+        </form>
+      </div>
+
+      <div class="can-row">
+        {% for job in jobs %}
+          <a href="{% url 'job_detail' job.id %}" style="text-decoration:none;color:inherit;">
+            <div class="can-card can-pad">
+              <div style="display:flex;gap:14px;align-items:center;margin-bottom:8px;">
+                {% if job.recruiter.logo %}
+                  <img src="{{ job.recruiter.logo.url }}" alt="" style="width:42px;height:42px;border-radius:10px;object-fit:cover;border:1px solid var(--border);">
+                {% else %}
+                  <div style="width:42px;height:42px;border-radius:10px;background:var(--chip);border:1px solid var(--border);"></div>
+                {% endif %}
+                <div>
+                  <div style="font-weight:700;font-size:18px;">{{ job.title }}</div>
+                  <div class="can-muted" style="font-size:13px;">
+                    {{ job.recruiter.recruiter.company_name }} · {{ job.location_city }} {{ job.location_country }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="can-chips">
+                <span class="can-chip">{{ job.get_job_type_display }}</span>
+                <span class="can-chip">{{ job.get_work_mode_display }}</span>
+                {% for js in job.job_skills.all|slice:":3" %}
+                  <span class="can-chip">{{ js.skill.name }}</span>
+                {% endfor %}
+                {% if job.job_skills.count > 3 %}
+                  <span class="can-chip">+{{ job.job_skills.count|add:"-3" }}</span>
+                {% endif %}
+              </div>
+
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;">
+                <span class="can-muted" style="font-size:12px;">Posted {{ job.posted_at|timesince }} ago</span>
+                <span class="can-badge">View →</span>
               </div>
             </div>
-          </div>
-
-          <div class="can-chips">
-            <span class="can-chip">{{ job.get_job_type_display }}</span>
-            <span class="can-chip">{{ job.get_work_mode_display }}</span>
-            {% for js in job.job_skills.all|slice:":3" %}
-              <span class="can-chip">{{ js.skill.name }}</span>
-            {% endfor %}
-            {% if job.job_skills.count > 3 %}
-              <span class="can-chip">+{{ job.job_skills.count|add:"-3" }}</span>
-            {% endif %}
-          </div>
-
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;">
-            <span class="can-muted" style="font-size:12px;">Posted {{ job.posted_at|timesince }} ago</span>
-            <span class="can-badge">View →</span>
-          </div>
-        </div>
-      </a>
-    {% empty %}
-      <div class="can-card can-pad">No jobs yet.</div>
-    {% endfor %}
+          </a>
+        {% empty %}
+          <div class="can-card can-pad">No jobs match your filters.</div>
+        {% endfor %}
+      </div>
+    </div>
   </div>
 </div>
-{% endblock %}
 
+<script>
+  // Auto-submit when any filter changes (click-to-filter)
+  const f = document.getElementById('filters');
+  if (f) {
+    f.querySelectorAll('input, select').forEach(el => {
+      el.addEventListener('change', () => f.submit());
+    });
+  }
+</script>
+{% endblock %}

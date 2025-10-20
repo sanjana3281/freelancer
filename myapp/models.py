@@ -5,6 +5,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 from django.utils import timezone
 from datetime import timedelta
+from django.db import models
 
 class Freelancer(models.Model):
     name = models.CharField(max_length=200)
@@ -63,6 +64,9 @@ class FreelancerProfile(models.Model):
     publications_link = models.URLField(blank=True)  
     portfolio_link = models.URLField(blank=True)    
     profile_photo = models.ImageField(upload_to="freelancer_photos/", blank=True, null=True)
+    rating_avg = models.DecimalField(max_digits=3, decimal_places=2, null=True, blank=True)
+    rating_count = models.PositiveIntegerField(default=0)
+
 
 
     def __str__(self):
@@ -404,21 +408,54 @@ class ApplicationFlow(models.Model):
 
 
 
-# models.py
-class Review(models.Model):
-    """
-    One review per side per application after completion.
-    Start with just recruiter->freelancer (what you asked).
-    """
-    application = models.OneToOneField("Application", on_delete=models.CASCADE, related_name="review_from_recruiter")
-    reviewer = models.ForeignKey("Recruiter", on_delete=models.CASCADE)
-    reviewee = models.ForeignKey("Freelancer", on_delete=models.CASCADE)
-    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
-    comment = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+#review and contact
+# myapp/models.py
 
-    def _str_(self):
-        return f"Review(app={self.application_id}, {self.rating}★)"
+
+class Contract(models.Model):
+    """
+    Created automatically when a flow is set to HIRED.
+    Tracks whether the engagement was completed.
+    """
+    application = models.OneToOneField("Application", on_delete=models.CASCADE, related_name="contract")
+    started_at = models.DateTimeField(default=timezone.now)
+    is_completed = models.BooleanField(default=False)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    completion_notes = models.TextField(blank=True)
+
+    def mark_completed(self, notes=""):
+        if not self.is_completed:
+            self.is_completed = True
+            self.completed_at = timezone.now()
+        if notes:
+            self.completion_notes = notes
+
+    def __str__(self):
+        return f"Contract(app={self.application_id})"
+
+
+class FreelancerReview(models.Model):
+    """
+    One review per contract (per hire).
+    Left by the job's recruiter for the hired freelancer.
+    """
+    contract = models.OneToOneField(Contract, on_delete=models.CASCADE, related_name="review")
+    recruiter = models.ForeignKey("RecruiterProfile", on_delete=models.CASCADE, related_name="reviews_given")
+    freelancer = models.ForeignKey("FreelancerProfile", on_delete=models.CASCADE, related_name="reviews_received")
+
+    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    review_text = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Review({self.freelancer_id} from {self.recruiter_id} → {self.rating}★)"
+
+
 
 
 

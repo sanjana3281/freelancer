@@ -293,3 +293,22 @@ class FreelancerSkillForm(forms.ModelForm):
             "skill": forms.Select(attrs={"class": "skill-select"}),
         }
 
+
+#review and contact
+# myapp/forms.py
+from django import forms
+from .models import FreelancerReview
+
+class ReviewForm(forms.ModelForm):
+    is_completed = forms.BooleanField(required=False, label="Freelancer completed the job")
+    completion_notes = forms.CharField(required=False, widget=forms.Textarea(attrs={"rows":3}), label="Completion notes")
+
+    class Meta:
+        model = FreelancerReview
+        fields = ["rating", "review_text", "is_completed", "completion_notes"]
+        widgets = {
+            "rating": forms.NumberInput(attrs={"min":1, "max":5}),
+            "review_text": forms.Textarea(attrs={"rows":4, "placeholder":"Share feedback (optional)"}),
+        }
+        labels = {"rating":"Rating (1–5 stars)", "review_text":"Written review"}
+

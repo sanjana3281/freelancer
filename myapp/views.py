@@ -24,10 +24,15 @@ from django.http import JsonResponse
 from .models import (
     Freelancer, FreelancerProfile,
     FreelancerProject, Achievement, Publication,
-    Application,Role, Skill,Notification,
+    Application,Role, Skill,Notification,Job,
 )
 from django import forms
-from .models import Review
+
+from datetime import timedelta
+from django.db.models import Q, F
+from django.db.models import Count as DjCount
+
+from .models import Job
 def whoami(request):
     return JsonResponse({
         "session_key": request.session.session_key,
@@ -386,20 +391,20 @@ def jobs_list_view(request):
 
 
 
-def jobs_list_view(request):
-    if request.session.get("role") == "recruiter":
-        return redirect("my_jobs")
+# def jobs_list_view(request):
+#     if request.session.get("role") == "recruiter":
+#         return redirect("my_jobs")
 
-    qs = (Job.objects
-            .filter(is_active=True) 
-            .select_related("recruiter", "recruiter__recruiter")
-            .order_by("-posted_at"))
+#     qs = (Job.objects
+#             .filter(is_active=True) 
+#             .select_related("recruiter", "recruiter__recruiter")
+#             .order_by("-posted_at"))
 
-    q = (request.GET.get("q") or "").strip()
-    if q:
-        qs = qs.filter(Q(title__icontains=q) | Q(description__icontains=q))
+#     q = (request.GET.get("q") or "").strip()
+#     if q:
+#         qs = qs.filter(Q(title__icontains=q) | Q(description__icontains=q))
 
-    return render(request, "jobs/jobs_list.html", {"jobs": qs, "q": q})
+#     return render(request, "jobs/jobs_list.html", {"jobs": qs, "q": q})
 
 
 def job_detail_view(request, job_id):
@@ -599,22 +604,90 @@ def flow_recruiter_schedule_interview(request, app_id):
 
     return render(request, "jobs/schedule_interview.html", {"app": app, "flow": flow})
 
-
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from django.http import HttpResponseNotAllowed
+from django.db import transaction
+from .models import Application, ApplicationFlow, Contract, RecruiterProfile
 @recruiter_required
-def flow_recruiter_set_outcome(request, app_id, decision):
-    recruiter = Recruiter.objects.get(id=request.session["recruiter_id"])
-    rp = getattr(recruiter, "profile", None)
-    app = get_object_or_404(Application.objects.select_related("job"), id=app_id, job__recruiter=rp)
-    flow, _ = ApplicationFlow.objects.get_or_create(application=app)
+# def flow_recruiter_set_outcome(request, app_id, decision):
+#     recruiter = Recruiter.objects.get(id=request.session["recruiter_id"])
+#     rp = getattr(recruiter, "profile", None)
+#     app = get_object_or_404(Application.objects.select_related("job"), id=app_id, job__recruiter=rp)
+#     flow, _ = ApplicationFlow.objects.get_or_create(application=app)
 
-    if decision not in ("hire", "reject"):
-        messages.error(request, "Invalid outcome.")
-        return redirect("job_applications", job_id=app.job.id)
+#     if decision not in ("hire", "reject"):
+#         messages.error(request, "Invalid outcome.")
+#         return redirect("job_applications", job_id=app.job.id)
 
-    flow.set_outcome(hired=(decision == "hire"))
-    flow.save()
-    messages.success(request, f"Marked as {flow.stage.lower()}.")
-    return redirect("job_applications", job_id=app.job.id)
+#     flow.set_outcome(hired=(decision == "hire"))
+#     flow.save()
+#     messages.success(request, f"Marked as {flow.stage.lower()}.")
+#     return redirect("job_applications", job_id=app.job.id)
+# myapp/views.py
+
+
+# def flow_recruiter_set_outcome(request, app_id, decision):
+#     """
+#     Finalize an application's outcome as HIRED or REJECTED.
+
+#     - Only the job's recruiter (from session) can set the outcome.
+#     - Only accepts POST.
+#     - Idempotent for already-final states.
+#     - On HIRED, ensures a Contract anchor exists for reviews/completion.
+#     """
+#     if request.method != "POST":
+#         return HttpResponseNotAllowed(["POST"])
+
+#     # --- Authz: recruiter must be in session and own the job ---
+#     rid = request.session.get("recruiter_id")
+#     if not rid:
+#         messages.error(request, "Please log in as a recruiter.")
+#         return redirect("login_page")  # adjust to your login route
+
+#     # Pull the application that belongs to this recruiter
+#     app = get_object_or_404(
+#         Application.objects.select_related("job", "job__recruiter", "flow"),
+#         id=app_id,
+#         job__recruiter__id=rid,
+#     )
+
+#     # Ensure there is a flow row
+#     flow, _ = ApplicationFlow.objects.get_or_create(application=app)
+
+#     # --- Normalize and validate decision ---
+#     decision = (decision or "").strip().lower()
+#     if decision not in {"hire", "reject"}:
+#         messages.error(request, "Invalid decision. Use 'hire' or 'reject'.")
+#         return redirect("application_detail", app_id=app.id)
+
+#     # --- Prevent changing after finalization ---
+#     if flow.stage in {"HIRED", "REJECTED"}:
+#         messages.info(request, f"Already finalized as {flow.stage}.")
+#         return redirect("application_detail", app_id=app.id)
+
+#     # (Optional) Enforce allowed-from stages for hire/reject:
+#     # e.g., you may want to only allow HIRED from INTERVIEW or SHORTLISTED_ACCEPTED.
+#     # allowed_from_hire = {"INTERVIEW", "SHORTLISTED_ACCEPTED", "SHORTLISTED"}
+#     # allowed_from_reject = {"SUBMITTED", "SHORTLISTED", "SHORTLISTED_ACCEPTED", "INTERVIEW"}
+#     # if decision == "hire" and flow.stage not in allowed_from_hire:
+#     #     messages.error(request, "You can only mark HIRED after interview/acceptance.")
+#     #     return redirect("application_detail", app_id=app.id)
+
+#     with transaction.atomic():
+#         if decision == "hire":
+#             flow.set_outcome(True)  # sets stage=HIRED, outcome_at=now
+#             flow.save(update_fields=["stage", "outcome_at"])
+#             # Ensure a Contract exists (anchor for review + completion)
+#             Contract.objects.get_or_create(application=app)
+#             messages.success(request, "Marked as HIRED. You can now leave a review.")
+#         else:
+#             flow.set_outcome(False)  # sets stage=REJECTED, outcome_at=now
+#             flow.save(update_fields=["stage", "outcome_at"])
+#             messages.info(request, "Marked as REJECTED.")
+
+#     return redirect("application_detail", app_id=app.id)
+
 
 
 @freelancer_required
@@ -690,77 +763,216 @@ def freelancer_dashboard(request):
 
 #
 
-@recruiter_required
-def flow_recruiter_request_completion(request, app_id):
-    recruiter = Recruiter.objects.get(id=request.session["recruiter_id"])
-    rp = getattr(recruiter, "profile", None)
-    app = get_object_or_404(Application.objects.select_related("job", "freelancer"), id=app_id, job__recruiter=rp)
+# @recruiter_required
+# def flow_recruiter_request_completion(request, app_id):
+#     recruiter = Recruiter.objects.get(id=request.session["recruiter_id"])
+#     rp = getattr(recruiter, "profile", None)
+#     app = get_object_or_404(Application.objects.select_related("job", "freelancer"), id=app_id, job__recruiter=rp)
+#     flow, _ = ApplicationFlow.objects.get_or_create(application=app)
+
+#     if flow.stage != "HIRED":
+#         messages.error(request, "You can request completion only after hiring.")
+#         return redirect("job_applications", job_id=app.job.id)
+
+#     flow.request_completion()
+#     flow.save()
+#     messages.success(request, "Asked the freelancer to confirm completion.")
+#     return redirect("job_applications", job_id=app.job.id)
+
+
+# @freelancer_required
+# def flow_freelancer_confirm_completion(request, app_id):
+#     fp = FreelancerProfile.objects.get(freelancer_id=request.session["freelancer_id"])
+#     app = get_object_or_404(Application.objects.select_related("flow", "job__recruiter"), id=app_id, freelancer=fp)
+#     flow = getattr(app, "flow", None)
+
+#     if not flow or flow.stage != "COMPLETION_REQUESTED":
+#         messages.error(request, "No completion request pending.")
+#         return redirect("freelancer_dashboard")
+
+#     if request.method == "POST":
+#         flow.confirm_completion()
+#         flow.save()
+#         messages.success(request, "Marked completed. Thanks!")
+#         return redirect("freelancer_dashboard")
+
+#     return render(request, "jobs/confirm_completion.html", {"app": app, "flow": flow})
+
+
+# # --- Review (recruiter -> freelancer) ---
+# class ReviewForm(forms.ModelForm):
+#     class Meta:
+#         model = Review
+#         fields = ["rating", "comment"]
+
+# @recruiter_required
+# def flow_recruiter_review(request, app_id):
+#     recruiter = Recruiter.objects.get(id=request.session["recruiter_id"])
+#     rp = getattr(recruiter, "profile", None)
+#     app = get_object_or_404(Application.objects.select_related("job", "freelancer", "flow"), id=app_id, job__recruiter=rp)
+#     flow = app.flow
+
+#     if not flow or flow.stage != "COMPLETED":
+#         messages.error(request, "You can review only after freelancer confirms completion.")
+#         return redirect("job_applications", job_id=app.job.id)
+
+#     if hasattr(app, "review_from_recruiter"):
+#         messages.info(request, "You already left a review.")
+#         return redirect("job_applications", job_id=app.job.id)
+
+#     if request.method == "POST":
+#         form = ReviewForm(request.POST)
+#         if form.is_valid():
+#             r = form.save(commit=False)
+#             r.application = app
+#             r.reviewer = recruiter
+#             r.reviewee = app.freelancer  # FK to Freelancer on Application
+#             r.save()
+#             messages.success(request, "Review submitted.")
+#             return redirect("job_applications", job_id=app.job.id)
+#     else:
+#         form = ReviewForm()
+
+#     return render(request, "jobs/review_form.html", {"form": form, "app": app})
+#reveiw and contact
+# myapp/views.py
+from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib import messages
+from .models import Application, Contract, FreelancerReview, RecruiterProfile
+from .forms import ReviewForm
+
+
+def _get_recruiter_profile_from_session(request):
+    rid = request.session.get("recruiter_id")
+    if not rid:
+        return None
+    # Your session stores the base Recruiter.id, so fetch the profile by recruiter_id
+    try:
+        return RecruiterProfile.objects.select_related("recruiter").get(recruiter_id=rid)
+    except RecruiterProfile.DoesNotExist:
+        # If you ever store the profile id directly, this fallback helps
+        try:
+            return RecruiterProfile.objects.select_related("recruiter").get(id=rid)
+        except RecruiterProfile.DoesNotExist:
+            return None
+def flow_recruiter_set_outcome(request, app_id, decision):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+
+    rp = _get_recruiter_profile_from_session(request)
+    if rp is None:
+        messages.error(request, "Please log in as a recruiter.")
+        return redirect("login_page")
+
+    # IMPORTANT: filter by the *profile* object, not by the base Recruiter id
+    app = get_object_or_404(
+        Application.objects.select_related("job", "flow"),
+        id=app_id,
+        job__recruiter=rp,
+    )
+
     flow, _ = ApplicationFlow.objects.get_or_create(application=app)
+    decision = (decision or "").lower().strip()
+    if decision not in {"hire", "reject"}:
+        messages.error(request, "Invalid decision.")
+        return redirect("job_application_detail", app_id=app.id)
 
-    if flow.stage != "HIRED":
-        messages.error(request, "You can request completion only after hiring.")
-        return redirect("job_applications", job_id=app.job.id)
+    if flow.stage in {"HIRED", "REJECTED"}:
+        messages.info(request, f"Already finalized as {flow.stage}.")
+        return redirect("job_application_detail", app_id=app.id)
 
-    flow.request_completion()
-    flow.save()
-    messages.success(request, "Asked the freelancer to confirm completion.")
-    return redirect("job_applications", job_id=app.job.id)
+    with transaction.atomic():
+        if decision == "hire":
+            flow.set_outcome(True)
+            flow.save(update_fields=["stage", "outcome_at"])
+            Contract.objects.get_or_create(application=app)
+            messages.success(request, "Marked as HIRED. You can now leave a review.")
+        else:
+            flow.set_outcome(False)
+            flow.save(update_fields=["stage", "outcome_at"])
+            messages.info(request, "Marked as REJECTED.")
 
-
-@freelancer_required
-def flow_freelancer_confirm_completion(request, app_id):
-    fp = FreelancerProfile.objects.get(freelancer_id=request.session["freelancer_id"])
-    app = get_object_or_404(Application.objects.select_related("flow", "job__recruiter"), id=app_id, freelancer=fp)
-    flow = getattr(app, "flow", None)
-
-    if not flow or flow.stage != "COMPLETION_REQUESTED":
-        messages.error(request, "No completion request pending.")
-        return redirect("freelancer_dashboard")
-
-    if request.method == "POST":
-        flow.confirm_completion()
-        flow.save()
-        messages.success(request, "Marked completed. Thanks!")
-        return redirect("freelancer_dashboard")
-
-    return render(request, "jobs/confirm_completion.html", {"app": app, "flow": flow})
+    return redirect("job_application_detail", app_id=app.id)
 
 
-# --- Review (recruiter -> freelancer) ---
-class ReviewForm(forms.ModelForm):
-    class Meta:
-        model = Review
-        fields = ["rating", "comment"]
+def application_review_create(request, app_id):
+    rp = _get_recruiter_profile_from_session(request)
 
-@recruiter_required
-def flow_recruiter_review(request, app_id):
-    recruiter = Recruiter.objects.get(id=request.session["recruiter_id"])
-    rp = getattr(recruiter, "profile", None)
-    app = get_object_or_404(Application.objects.select_related("job", "freelancer", "flow"), id=app_id, job__recruiter=rp)
+    # ⬇️ NOTE: 'freelancer' (no '__profile') because Application.freelancer is already a FreelancerProfile FK
+    app = get_object_or_404(
+        Application.objects.select_related("job", "freelancer", "flow"),
+        id=app_id,
+        job__recruiter=rp,
+    )
     flow = app.flow
+    if not flow or flow.stage != "HIRED":
+        messages.error(request, "You can review only after hiring.")
+        return redirect("application_detail", app_id=app.id)
 
-    if not flow or flow.stage != "COMPLETED":
-        messages.error(request, "You can review only after freelancer confirms completion.")
-        return redirect("job_applications", job_id=app.job.id)
-
-    if hasattr(app, "review_from_recruiter"):
-        messages.info(request, "You already left a review.")
-        return redirect("job_applications", job_id=app.job.id)
+    contract, _ = Contract.objects.get_or_create(application=app)
+    if hasattr(contract, "review"):
+        messages.info(request, "Review already exists—use Edit.")
+        return redirect("application_review_edit", app_id=app.id)
 
     if request.method == "POST":
         form = ReviewForm(request.POST)
         if form.is_valid():
-            r = form.save(commit=False)
-            r.application = app
-            r.reviewer = recruiter
-            r.reviewee = app.freelancer  # FK to Freelancer on Application
-            r.save()
-            messages.success(request, "Review submitted.")
-            return redirect("job_applications", job_id=app.job.id)
+            review = form.save(commit=False)
+            review.contract = contract
+            review.recruiter = rp
+            review.freelancer = app.freelancer   # ⬅️ use the profile directly
+            review.save()
+
+            if form.cleaned_data.get("is_completed"):
+                contract.mark_completed(form.cleaned_data.get("completion_notes", ""))
+            else:
+                contract.completion_notes = form.cleaned_data.get("completion_notes", "")
+            contract.save()
+
+            messages.success(request, "Review submitted. Thank you!")
+            return redirect("job_application_detail", app_id=app.id)
     else:
         form = ReviewForm()
 
-    return render(request, "jobs/review_form.html", {"form": form, "app": app})
+    return render(request, "applications/review_form.html", {"application": app, "form": form})
+
+
+def application_review_edit(request, app_id):
+    rp = _get_recruiter_profile_from_session(request)
+
+    app = get_object_or_404(
+        Application.objects.select_related("job", "freelancer", "flow"),
+        id=app_id,
+        job__recruiter=rp,
+    )
+    contract = get_object_or_404(Contract, application=app)
+    review = get_object_or_404(FreelancerReview, contract=contract, recruiter=rp)
+
+    if request.method == "POST":
+        form = ReviewForm(request.POST, instance=review)
+        if form.is_valid():
+            form.save()
+            if form.cleaned_data.get("is_completed"):
+                contract.mark_completed(form.cleaned_data.get("completion_notes", ""))
+            else:
+                contract.is_completed = False
+                contract.completed_at = None
+                contract.completion_notes = form.cleaned_data.get("completion_notes", "")
+            contract.save()
+
+            messages.success(request, "Review updated.")
+            return redirect("job_application_detail", app_id=app.id)
+    else:
+        form = ReviewForm(
+            instance=review,
+            initial={
+                "is_completed": contract.is_completed,
+                "completion_notes": contract.completion_notes,
+            },
+        )
+
+    return render(request, "applications/review_form.html", {"application": app, "form": form, "is_edit": True})
+
 
 
 
@@ -850,3 +1062,213 @@ def notifications_mark_all_read(request):
 
 
 #fliter
+
+
+from datetime import timedelta
+from django.db.models import Q, F, Count as DjCount
+from django.utils import timezone
+from django.shortcuts import render, redirect
+from django.contrib import messages
+
+from .models import Job, Skill  # <-- make sure Skill is imported
+
+# Role buckets for title matching
+ROLE_BUCKETS = {
+    "DATA_ANALYST":   ["data analyst", "analytics"],
+    "DATA_SCIENTIST": ["data scientist", "ml", "machine learning"],
+    "BACKEND_DEV":    ["backend", "back-end", "django", "node", "spring", "api"],
+    "FRONTEND_DEV":   ["frontend", "front-end", "react", "angular", "vue"],
+    "FULLSTACK_DEV":  ["full stack", "full-stack"],
+    "DEVOPS":         ["devops", "sre", "site reliability"],
+    "ML_ENGINEER":    ["ml engineer", "ai engineer"],
+    "MOBILE_DEV":     ["android", "ios", "flutter", "react native"],
+    "UI_UX":          ["ui/ux", "ux designer", "ui designer", "product designer"],
+    "QA_TESTER":      ["qa", "tester", "test engineer", "quality assurance"],
+}
+
+def _filter_by_role(qs, role_key: str):
+    kws = ROLE_BUCKETS.get(role_key, [])
+    if not kws:
+        return qs.none()
+    cond = Q()
+    for kw in kws:
+        cond |= Q(title__icontains=kw)
+    return qs.filter(cond)
+
+def jobs_list_view(request):
+    # recruiters see their own area
+    if request.session.get("role") == "recruiter":
+        return redirect("my_jobs")
+
+    qs = (Job.objects
+            .filter(is_active=True)
+            .select_related("recruiter", "recruiter__recruiter")
+            .prefetch_related("skills_required")
+            .order_by("-posted_at"))
+
+    # -------- read inputs --------
+    q         = (request.GET.get("q") or "").strip()
+
+    # SKILLS: checkboxes + free-text "skill_custom" (comma separated OK)
+    skills = [s.strip() for s in request.GET.getlist("skills") if s and s.strip()]
+    skill_custom_raw = (request.GET.get("skill_custom") or "").strip()
+    if skill_custom_raw:
+        for part in skill_custom_raw.split(","):
+            part = part.strip()
+            if part:
+                skills.append(part)
+    # dedupe case-insensitively
+    seen = set()
+    skills = [s for s in skills if not (s.lower() in seen or seen.add(s.lower()))]
+
+    exp_min   = (request.GET.get("exp_min") or "").strip()
+    exp_max   = (request.GET.get("exp_max") or "").strip()
+    bmin      = (request.GET.get("budget_min") or "").strip()
+    bmax      = (request.GET.get("budget_max") or "").strip()
+    currency  = (request.GET.get("currency") or "").strip()
+    remote    = (request.GET.get("remote") or "").strip()
+    city      = (request.GET.get("city") or "").strip()
+    country   = (request.GET.get("country") or "").strip()
+    posted    = (request.GET.get("posted") or "").strip()
+    job_type  = (request.GET.get("job_type") or "").strip()
+    role      = (request.GET.get("role") or "").strip()
+    sort      = (request.GET.get("sort") or "new").strip()
+
+    # -------- apply filters --------
+    if q:
+        qs = qs.filter(
+            Q(title__icontains=q) |
+            Q(description__icontains=q) |
+            Q(recruiter__recruiter__company_name__icontains=q) |
+            Q(location_city__icontains=q) |
+            Q(location_country__icontains=q)
+        )
+
+    if role:
+        qs = _filter_by_role(qs, role)
+
+    if skills:
+        cond = Q()
+        for term in skills:
+            cond |= Q(skills_required__name__iexact=term) | Q(skills_required__name__icontains=term)
+        qs = qs.filter(cond).distinct()
+
+    if exp_min:
+        qs = qs.filter(experience_required__icontains=exp_min)
+    if exp_max:
+        qs = qs.filter(experience_required__icontains=exp_max)
+
+    try:
+        if bmin:
+            qs = qs.filter(salary_min__gte=float(bmin))
+        if bmax:
+            qs = qs.filter(salary_max__lte=float(bmax))
+    except ValueError:
+        pass
+
+    if currency:
+        qs = qs.filter(currency__iexact=currency)
+    if remote:
+        qs = qs.filter(work_mode__iexact=remote)
+    if city:
+        qs = qs.filter(location_city__icontains=city)
+    if country:
+        qs = qs.filter(location_country__icontains=country)
+
+    posted_map = {"1d": 1, "7d": 7, "30d": 30}
+    if posted in posted_map:
+        qs = qs.filter(posted_at__gte=timezone.now() - timedelta(days=posted_map[posted]))
+
+    if job_type:
+        qs = qs.filter(job_type__iexact=job_type)
+
+    # sorting
+    if sort == "budget_desc":
+        qs = qs.order_by(F("salary_max").desc(nulls_last=True), "-posted_at")
+    elif sort == "salary_low":
+        qs = qs.order_by(F("salary_min").asc(nulls_last=True), "-posted_at")
+    elif sort == "closing":
+        qs = qs.order_by("application_deadline", "-posted_at")
+    else:
+        qs = qs.order_by("-posted_at")
+
+    # -------- facets --------
+    facet_base = Job.objects.filter(is_active=True)
+    if q:
+        facet_base = facet_base.filter(
+            Q(title__icontains=q) |
+            Q(description__icontains=q) |
+            Q(recruiter__recruiter__company_name__icontains=q) |
+            Q(location_city__icontains=q) |
+            Q(location_country__icontains=q)
+        )
+    if skills:
+        # mirror skills logic for facet base
+        cond = Q()
+        for term in skills:
+            cond |= Q(skills_required__name__iexact=term) | Q(skills_required__name__icontains=term)
+        facet_base = facet_base.filter(cond).distinct()
+    if posted in posted_map:
+        facet_base = facet_base.filter(posted_at__gte=timezone.now() - timedelta(days=posted_map[posted]))
+    try:
+        if bmin:
+            facet_base = facet_base.filter(salary_min__gte=float(bmin))
+        if bmax:
+            facet_base = facet_base.filter(salary_max__lte=float(bmax))
+    except ValueError:
+        pass
+
+    facet_workplace = {r["work_mode"]: r["n"] for r in facet_base.values("work_mode").annotate(n=DjCount("id"))}
+    facet_jobtype   = {r["job_type"]: r["n"]   for r in facet_base.values("job_type").annotate(n=DjCount("id"))}
+    facet_role      = {}
+    for key, kws in ROLE_BUCKETS.items():
+        c = 0
+        for kw in kws:
+            c += facet_base.filter(title__icontains=kw).count()
+        facet_role[key] = c
+
+    # -------- options for template loops --------
+    WORK_MODES  = Job.WORK_MODES
+    JOB_TYPES   = Job.JOB_TYPES
+    POSTED_OPTS = [("1d", "Last 24h"), ("7d", "Last 7 days"), ("30d", "Last 30 days")]
+    ROLE_LABELS = [
+        ("DATA_ANALYST", "Data Analyst"),
+        ("DATA_SCIENTIST", "Data Scientist"),
+        ("BACKEND_DEV", "Backend Developer"),
+        ("FRONTEND_DEV", "Frontend Developer"),
+        ("FULLSTACK_DEV", "Full-Stack Developer"),
+        ("DEVOPS", "DevOps / SRE"),
+        ("ML_ENGINEER", "ML Engineer"),
+        ("MOBILE_DEV", "Mobile Developer"),
+        ("UI_UX", "UI/UX Designer"),
+        ("QA_TESTER", "QA / Test Engineer"),
+    ]
+
+    # popular skills from DB (fallback to a small list)
+    try:
+        POPULAR_SKILLS = list(
+            Skill.objects.filter(jobs__is_active=True)
+            .annotate(n=DjCount("jobs"))
+            .order_by("-n", "name")
+            .values_list("name", flat=True)[:20]
+        )
+        if not POPULAR_SKILLS:
+            POPULAR_SKILLS = ["Python", "Django", "SQL", "React", "AWS", "Azure", "Flask"]
+    except Exception:
+        POPULAR_SKILLS = ["Python", "Django", "SQL", "React", "AWS", "Azure", "Flask"]
+
+    CURRENCIES = ["INR", "USD", "EUR"]
+
+    # -------- build context ONCE (no context.update) --------
+    context = {
+        "jobs": qs,
+        "facet": {"workplace": facet_workplace, "jobtype": facet_jobtype, "role": facet_role},
+        "WORK_MODES": WORK_MODES,
+        "JOB_TYPES": JOB_TYPES,
+        "POSTED_OPTS": POSTED_OPTS,
+        "ROLE_LABELS": ROLE_LABELS,
+        "POPULAR_SKILLS": POPULAR_SKILLS,
+        "CURRENCIES": CURRENCIES,
+        "selected_skills": skills,
+    }
+    return render(request, "jobs/jobs_list.html", context)

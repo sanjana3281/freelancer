@@ -83,11 +83,11 @@
         {% if fp.availability %}<span class="can-chip">🟢 {{ fp.availability }}</span>{% endif %}
         {% if fp.city or fp.country %}<span class="can-chip">📍 {{ fp.city }} {{ fp.country }}</span>{% endif %}
       </div>
-      {% if job %}
-    <a class="can-btn" href="{% url 'flow_recruiter_shortlist' job.id fp.id %}">
+      <!-- {% if job %} -->
+    <!-- <a class="can-btn" href="{% url 'flow_recruiter_shortlist' job.id fp.id %}">
         ⭐ Shortlist for “{{ job.title }}”
-    </a>
-{% endif %}
+    </a> -->
+<!-- {% endif %} -->
 
     </div>
 

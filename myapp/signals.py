@@ -2,13 +2,14 @@
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save,post_delete
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.html import strip_tags
+from django.db.models import Avg, Count
 
-from .models import Job, Freelancer, Notification
+from .models import Job, Freelancer, Notification,FreelancerReview
 
 
 @receiver(post_save, sender=Job)
@@ -91,3 +92,21 @@ def notify_all_freelancers_on_job_create(sender, instance: Job, created, **kwarg
             print(f"❌ Email sending failed: {e}")
 
     transaction.on_commit(_send)
+
+
+
+
+#for review and contact
+
+
+def _recalc(f):
+    s = f.reviews_received.aggregate(avg=Avg("rating"), cnt=Count("id"))
+    f.rating_avg = s["avg"] or None
+    f.rating_count = s["cnt"] or 0
+    f.save(update_fields=["rating_avg", "rating_count"])
+
+@receiver(post_save, sender=FreelancerReview)
+def _on_save(sender, instance, **kw): _recalc(instance.freelancer)
+
+@receiver(post_delete, sender=FreelancerReview)
+def _on_del(sender, instance, **kw): _recalc(instance.freelancer)
