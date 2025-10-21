@@ -63,6 +63,9 @@ urlpatterns = [
 
      # for fliters
     path("freelancer/jobs/", views.jobs_list_view, name="job_list"),  # <- use jobs_list_view
+    #for the communiaction progress
+    path("freelancer/applications/", views.freelancer_applications_view, name="freelancer_applications"),
+
 
 ]
 

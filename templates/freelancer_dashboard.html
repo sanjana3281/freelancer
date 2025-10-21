@@ -19,6 +19,8 @@
         {% if profile.resume_file %}
           <a class="can-btn can-btn-2" href="{{ profile.resume_file.url }}" target="_blank">View Resume</a>
         {% endif %}
+        <a class="can-btn-outline" href="{% url 'freelancer_applications' %}">View all applications →</a>
+
       </div>
     </div>
   </div>
@@ -93,7 +95,7 @@
     </script>
     {% endif %}
 
-    {#Invitations & Status #}
+    <!-- {#Invitations & Status #}
 {% if my_apps %}
   {% for app in my_apps %}
     {% with flow=app.flow %}
@@ -164,7 +166,7 @@
       {% endif %}
     {% endwith %}
   {% endfor %}
-{% endif %}
+{% endif %} -->
 
     <!-- About -->
     <section class="can-card can-pad-lg">

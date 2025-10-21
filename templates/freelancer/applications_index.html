@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container container-narrow mt-4">
+
+  <!-- Header -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <h2 class="can-title">My Applications</h2>
+    <a href="{% url 'freelancer_dashboard' %}" class="can-btn-outline">← Back to Dashboard</a>
+  </div>
+
+  <!-- 🏅 Badge + Progress -->
+  <div class="can-card can-pad" style="margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      {% if has_badge %}
+        <span class="can-chip" style="background:rgba(255,215,0,.15);color:#ffd700;font-weight:800;">
+          🏅 Most Recommended
+        </span>
+        <span class="can-muted">Amazing! You earned this by receiving five 5-star reviews.</span>
+      {% else %}
+        <span class="can-chip">⭐ Progress to “Most Recommended”</span>
+        <span class="can-muted">{{ progress_count }}/5 five-star reviews</span>
+        <div style="flex:1;min-width:200px;height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;">
+          <!-- <div style="width: {{ progress_pct }} %;height:100% ; background: #ffd700;"></div> -->
+            <div style="flex:1;min-width:200px;height:8px;border-radius:999px;
+                        background:rgba(255,255,255,.08);overflow:hidden;">
+            <div style="flex:1;min-width:200px;height:8px;border-radius:999px;
+            background:rgba(255,255,255,.08);overflow:hidden;">
+            <div style="width:{{ progress_pct }}%;height:100%;background:#ffd700;"></div>
+        </div>
+
+
+        </div>
+        {% if progress_left > 0 %}
+          <span class="can-muted">Just {{ progress_left }} more to go!</span>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Wizard bar -->
+  <!-- Wizard bar -->
+<div class="can-card can-pad" style="margin-bottom:16px;">
+  <nav style="display:flex;gap:8px;flex-wrap:wrap;">
+    {% with t=tab %}
+      <a class="can-badge"
+         href="?tab=shortlisted"
+         {% if t == 'shortlisted' %}
+           style="border-color:#4bd0ff;background:rgba(75,208,255,.08);"
+         {% endif %}>
+         Shortlisted ({{ counts.shortlisted }})
+      </a>
+
+      <a class="can-badge"
+         href="?tab=interviews"
+         {% if t == 'interviews' %}
+           style="border-color:#4bd0ff;background:rgba(75,208,255,.08);"
+         {% endif %}>
+         Interviews ({{ counts.interviews }})
+      </a>
+
+      <a class="can-badge"
+         href="?tab=hired"
+         {% if t == 'hired' %}
+           style="border-color:#4bd0ff;background:rgba(75,208,255,.08);"
+         {% endif %}>
+         Hired ({{ counts.hired }})
+      </a>
+
+      <a class="can-badge"
+         href="?tab=rejected"
+         {% if t == 'rejected' %}
+           style="border-color:#4bd0ff;background:rgba(75,208,255,.08);"
+         {% endif %}>
+         Rejected ({{ counts.rejected }})
+      </a>
+    {% endwith %}
+  </nav>
+</div>
+
+
+  {% comment %}
+    Replace 'jobs_list' below with your real job-browse route name (e.g. 'jobs' or 'jobs_list').
+  {% endcomment %}
+  {% with jobs_url_name='jobs_list' %}
+
+  <!-- ============ Shortlisted ============ -->
+  {% if tab == "shortlisted" %}
+    <section class="can-card can-pad-lg" style="margin-bottom:18px;">
+      <div class="can-title" style="font-size:18px;margin-bottom:10px;">Shortlisted</div>
+      {% if shortlisted %}
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          {% for app in shortlisted %}
+            {% with flow=app.flow %}
+            <article class="can-card can-pad" style="display:flex;flex-direction:column;gap:8px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="font-weight:800;">{{ app.job.title }}</div>
+                <a class="can-btn-outline" href="{% url 'job_detail' app.job.id %}">View job →</a>
+              </div>
+              {% if flow %}
+                {% if flow.stage == "SHORTLISTED" %}
+                  <span class="can-badge">Awaiting your response · by {{ flow.shortlist_expires_at|date:"d M, H:i" }}</span>
+                  <div class="can-chips">
+                    <a class="can-btn" href="{% url 'flow_freelancer_respond' app.id 'accept' %}">I’m Interested</a>
+                    <a class="can-btn-outline" href="{% url 'flow_freelancer_respond' app.id 'decline' %}">Not Interested</a>
+                  </div>
+                {% elif flow.stage == "SHORTLISTED_ACCEPTED" %}
+                  <span class="can-badge">You accepted · waiting for interview</span>
+                {% elif flow.stage == "SHORTLISTED_DECLINED" %}
+                  <span class="can-badge">You declined</span>
+                {% elif flow.stage == "SHORTLIST_EXPIRED" %}
+                  <span class="can-badge">Shortlist expired</span>
+                {% else %}
+                  <span class="can-badge">{{ flow.get_stage_display }}</span>
+                {% endif %}
+              {% endif %}
+            </article>
+            {% endwith %}
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="can-card can-pad" style="text-align:center;">
+          <div class="can-muted" style="margin-bottom:10px;">No shortlisted applications yet.</div>
+          <a class="can-btn" href="{% url jobs_url_name %}">Find jobs →</a>
+        </div>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  <!-- ============ Interviews ============ -->
+  {% if tab == "interviews" %}
+    <section class="can-card can-pad-lg" style="margin-bottom:18px;">
+      <div class="can-title" style="font-size:18px;margin-bottom:10px;">Interviews</div>
+      {% if interviews %}
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          {% for app in interviews %}
+            <article class="can-card can-pad">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="font-weight:800;">{{ app.job.title }}</div>
+                <a class="can-btn-outline" href="{% url 'job_detail' app.job.id %}">View job →</a>
+              </div>
+              <div class="can-muted" style="margin-top:4px;">
+                When: <b>{{ app.flow.interview_at|date:"d M, H:i" }}</b>
+                {% if app.flow.interview_link %}
+                  · Link: <a href="{{ app.flow.interview_link }}" target="_blank" rel="noopener">{{ app.flow.interview_link }}</a>
+                {% endif %}
+              </div>
+              {% if app.flow.interview_message %}
+                <div class="can-muted" style="margin-top:6px;">{{ app.flow.interview_message }}</div>
+              {% endif %}
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="can-card can-pad" style="text-align:center;">
+          <div class="can-muted" style="margin-bottom:10px;">No interviews scheduled.</div>
+          <a class="can-btn" href="{% url jobs_url_name %}">Find jobs →</a>
+        </div>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  <!-- ============ Hired ============ -->
+  {% if tab == "hired" %}
+    <section class="can-card can-pad-lg" style="margin-bottom:18px;">
+      <div class="can-title" style="font-size:18px;margin-bottom:10px;">Hired</div>
+      {% if hired %}
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          {% for app in hired %}
+            <article class="can-card can-pad">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div class="can-title" style="font-size:16px;margin:0;">Outcome: Hired — {{ app.job.title }}</div>
+                <a class="can-btn-outline" href="{% url 'job_detail' app.job.id %}">View job →</a>
+              </div>
+              {% if app.contract %}
+                {% if app.contract.is_completed %}
+                  <div class="can-chip" style="margin-top:6px;">✅ Marked completed on {{ app.contract.completed_at|date:"d M, Y" }}</div>
+                {% else %}
+                  <div class="can-chip" style="margin-top:6px;">⏳ In progress</div>
+                {% endif %}
+                {% if app.contract.review %}
+                  <div class="can-chip" style="margin-top:6px;">★ {{ app.contract.review.rating }} — “{{ app.contract.review.review_text|truncatechars:80 }}”</div>
+                {% endif %}
+              {% endif %}
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="can-card can-pad" style="text-align:center;">
+          <div class="can-muted" style="margin-bottom:10px;">No hired outcomes yet.</div>
+          <a class="can-btn" href="{% url jobs_url_name %}">Find jobs →</a>
+        </div>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  <!-- ============ Rejected ============ -->
+  {% if tab == "rejected" %}
+    <section class="can-card can-pad-lg" style="margin-bottom:18px;">
+      <div class="can-title" style="font-size:18px;margin-bottom:10px;">Rejected</div>
+      {% if rejected %}
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          {% for app in rejected %}
+            <article class="can-card can-pad">
+              <div class="can-title" style="font-size:16px;margin:0;">Outcome: Rejected — {{ app.job.title }}</div>
+              <a class="can-btn-outline" href="{% url 'job_detail' app.job.id %}" style="margin-top:6px;">View job →</a>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="can-card can-pad" style="text-align:center;">
+          <div class="can-muted" style="margin-bottom:10px;">No rejections.</div>
+          <a class="can-btn" href="{% url jobs_url_name %}">Find jobs →</a>
+        </div>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  {% endwith %}
+
+</div>
+{% endblock %}

@@ -1374,3 +1374,69 @@ def jobs_list_view(request):
         "selected_skills": skills,
     }
     return render(request, "jobs/jobs_list.html", context)
+
+#wizard
+# myapp/views.py
+from django.shortcuts import render, get_object_or_404
+from django.db.models import Prefetch, Count, Q
+from .models import Application, Freelancer, FreelancerProfile
+
+@freelancer_required
+def freelancer_applications_view(request):
+    fid = request.session.get("freelancer_id")
+    freelancer = get_object_or_404(Freelancer, id=fid)
+    fp = get_object_or_404(FreelancerProfile.objects.select_related("freelancer"), freelancer=freelancer)
+
+    apps = (
+        Application.objects
+        .filter(freelancer=fp)
+        .select_related("job", "job__recruiter", "flow", "contract", "contract__review")
+        .order_by("-created_at")
+    )
+
+    # Buckets
+    shortlisted, interviews, hired, rejected = [], [], [], []
+    for app in apps:
+        stage = (app.flow.stage if getattr(app, "flow", None) else "SUBMITTED")
+        if stage in {"SHORTLISTED", "SHORTLISTED_ACCEPTED", "SHORTLISTED_DECLINED", "SHORTLIST_EXPIRED", "SUBMITTED"}:
+            shortlisted.append(app)
+        elif stage == "INTERVIEW":
+            interviews.append(app)
+        elif stage == "HIRED":
+            hired.append(app)
+        elif stage == "REJECTED":
+            rejected.append(app)
+
+    # 🏅 Badge & progress (rule: 5+ reviews and all are 5★)
+    total_reviews = fp.reviews_received.count()
+    five_star_reviews = fp.reviews_received.filter(rating=5).count()
+    has_badge = total_reviews >= 5 and five_star_reviews == total_reviews
+    # Progress toward 5 five-star reviews (simple, motivating)
+    progress_count = min(five_star_reviews, 5)
+    progress_left = max(0, 5 - progress_count)
+    progress_pct = progress_count * 20
+
+    # Active tab (wizard)
+    tab = request.GET.get("tab", "shortlisted")
+    if tab not in {"shortlisted", "interviews", "hired", "rejected"}:
+        tab = "shortlisted"
+
+    ctx = {
+        "fp": fp,
+        "shortlisted": shortlisted,
+        "interviews": interviews,
+        "hired": hired,
+        "rejected": rejected,
+        "counts": {
+            "shortlisted": len(shortlisted),
+            "interviews": len(interviews),
+            "hired": len(hired),
+            "rejected": len(rejected),
+        },
+        "has_badge": has_badge,
+        "progress_count": progress_count,
+        "progress_left": progress_left,
+        "progress_pct": progress_pct,
+        "tab": tab,
+    }
+    return render(request, "freelancer/applications_index.html", ctx)
